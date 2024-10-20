@@ -4,10 +4,10 @@ import { config } from 'dotenv';
 config();
 
 const dbSettings = {
-    user : process.env.DBUSER,
-    password : 'ssdIDS2024#',
-    server: process.env.DBSERVER,
-    database : process.env.DATABASE,
+    user : "kaiomiyana",
+    password : "ssdIDS2024#",
+    server: "idsmiyana.database.windows.net",
+    database : "miyana",
     options : {
         encrypt: true,
         trustServerCertificate: false
