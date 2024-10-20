@@ -5,7 +5,7 @@ config();
 
 const dbSettings = {
     user : process.env.DBUSER,
-    password : process.env.DBPASSWORD,
+    password : 'ssdIDS2024#',
     server: process.env.DBSERVER,
     database : process.env.DATABASE,
     options : {
