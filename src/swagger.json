@@ -1,0 +1,89 @@
+{
+    "openapi" : "3.0.0",
+    "info": {
+      "title": "API H2O",
+      "description": "API desarrolladar para la app h2o",
+      "version": "1.0.0"
+    },
+    "produces": ["application/json"],
+    "paths": {
+      "/user": {
+        "summary": "Operaciones con Usuarios",
+        "post" : {
+          "tags" : ["user"],
+          "summary" : "Crea un usuario",
+          "description" : "Para crear un usuario de necesita los datos",
+          "requestBody" : {
+            "content" : {
+              "application/json" :{
+                "schema": {
+                  "type" : "object",
+                  "properties" : {
+                    "firtsName" : {
+                      "type" : "string",
+                      "example" : "pedro"
+                    },
+                    "lastName" : {
+                      "type" : "string",
+                      "example" : "roca"
+                    },
+                    "age" : {
+                      "type" : "number",
+                      "example" : 2
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses" : {
+            "200" : {
+              "description" : "usuario creado"
+            },
+            "400" : {
+              "description" : "Bad request",
+              "content" : {
+              "application/json" :{
+                "schema" : {
+                    "type" : "object",
+                    "properties" : {
+                      "error" : {
+                        "type" : "string",
+                        "example" : "dato invalido"
+                      },
+                      "message" : {
+                        "type" : "object",
+                        "properties" : {
+                          "errorQty" : {
+                            "type" : "number",
+                            "example" : 2
+                          },
+                          "errors" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get":{
+          "tags" : ["user"],
+          "summary" : "Connsulta todos los usuarios",
+          "description" : "Obtiene todo los usuarios creados",
+          "responses" : {
+            "200" : {
+              "description" : "ok"
+            }
+          }
+        }
+        
+      }
+    }
+  }
