@@ -15,9 +15,9 @@ const app = express();
 app.use(express.json());
 
 // Rutas
-app.use('/users', usersRoutes);
-app.use('/modules', modulesRoutes);
-app.use('/cartshopping', cartshoppingRoutes);
+app.use(usersRoutes);
+app.use(modulesRoutes);
+app.use(cartshoppingRoutes);
 
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
