@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "api_h2o",
+    "title": "api_h2o_local",
     "contact": {},
     "version": "1.0"
   },
@@ -381,6 +381,23 @@
         },
         "deprecated": false
       }
+    },
+    "/priceproduct/1/4": {
+      "get": {
+        "tags": [
+          "AdministrarProducts"
+        ],
+        "summary": "infoProducts",
+        "operationId": "infoProducts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
     }
   },
   "components": {
@@ -570,6 +587,9 @@
     },
     {
       "name": "CarShopping"
+    },
+    {
+      "name": "AdministrarProducts"
     }
   ]
 }
