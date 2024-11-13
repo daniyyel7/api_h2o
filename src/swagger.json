@@ -387,8 +387,42 @@
         "tags": [
           "AdministrarProducts"
         ],
-        "summary": "infoProducts",
-        "operationId": "infoProducts",
+        "summary": "infoProduct",
+        "operationId": "infoProduct",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/products/4": {
+      "get": {
+        "tags": [
+          "AdministrarProducts"
+        ],
+        "summary": "getProducts",
+        "operationId": "getProducts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/login/admin01/admin": {
+      "get": {
+        "tags": [
+          "Login"
+        ],
+        "summary": "login",
+        "operationId": "login",
         "parameters": [],
         "responses": {
           "200": {
@@ -590,6 +624,9 @@
     },
     {
       "name": "AdministrarProducts"
+    },
+    {
+      "name": "Login"
     }
   ]
 }
