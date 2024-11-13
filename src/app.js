@@ -3,6 +3,7 @@ import usersRoutes from './routes/users.routes.js';
 import modulesRoutes from './routes/modules.routes.js';
 import cartshoppingRoutes from './routes/cartshopping.routes.js';
 import productsRoutes from './routes/products.routes.js';
+import loginRoutes from './routes/login.routes.js';
 
 // Swagger documentación
 import swaggerUi from 'swagger-ui-express';
@@ -20,6 +21,7 @@ app.use(usersRoutes);
 app.use(modulesRoutes);
 app.use(cartshoppingRoutes);
 app.use(productsRoutes);
+app.use(loginRoutes);
 
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
