@@ -1,3 +1,4 @@
+
 {
   "openapi": "3.0.0",
   "info": {
@@ -406,6 +407,40 @@
         ],
         "summary": "getProducts",
         "operationId": "getProducts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": [
+          "AdministrarProducts"
+        ],
+        "summary": "getCategories",
+        "operationId": "getCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {}
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/productsCategorie/1/4": {
+      "get": {
+        "tags": [
+          "AdministrarProducts"
+        ],
+        "summary": "getProducsForCategorie",
+        "operationId": "getProducsForCategorie",
         "parameters": [],
         "responses": {
           "200": {
