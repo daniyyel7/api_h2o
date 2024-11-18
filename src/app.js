@@ -23,6 +23,8 @@ app.use(cartshoppingRoutes);
 app.use(productsRoutes);
 app.use(loginRoutes);
 
+
+
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,5 +35,7 @@ const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, 'utf-8'));
 
 // Configurar Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 export default app;
