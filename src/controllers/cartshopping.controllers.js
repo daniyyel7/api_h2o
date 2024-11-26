@@ -22,7 +22,6 @@ export const addProduct = async( req, res) => {
     });
 };
 
-
 export const updateCarProduct = async ( req, res) => {
     const pool = await getConnection()
     const result = await pool
@@ -40,4 +39,16 @@ export const updateCarProduct = async ( req, res) => {
         quantity : req.body.quantity, 
         status : req.body.status 
     });
+};
+
+export const productsCart = async ( req, res) => {
+    const pool = await getConnection()
+    const result = await pool
+    .request()
+    .input("idClient", sql.Int, req.params.id)
+    .query(" SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct, subtotal = (MCS.quantity*PPT.price) FROM MIY_CART_SHOPPING MCS INNER JOIN (SELECT * FROM MIY_PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM MIY_CLIENTS_DATA MCD INNER JOIN MIY_USERS MU ON MCD.idUser = MU.idUser INNER JOIN MIY_USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient) ) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1 ");
+    if( result.rowsAffected[0] === 0){
+        return res.status(404).json({ message : "products not found"});
+    }
+    return res.json(result.recordset);
 };
