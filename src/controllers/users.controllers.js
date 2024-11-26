@@ -82,7 +82,6 @@ export const createUserStatus = async (req,res) => {
 };
 
 
-
 //Crear un usuario
 export const createUser = async (req,res) => {
     const pool = await getConnection();
@@ -128,31 +127,6 @@ export const updateUser = async (req,res) => {
     });
 };
 
-
-//Crear un usuario cliente
-export const createClient = async (req,res) => {
-    const pool = await getConnection();
-    const result = await pool
-    .request()
-    .input("name", sql.VarChar, req.body.name)
-    .input("apellidoPaterno", sql.VarChar, req.body.apellidoPaterno)
-    .input("apellidoMaterno", sql.VarChar, req.body.apellidoMaterno)
-    .input("telefono", sql.VarChar, req.body.telefono)
-    .input("fechaNacimiento", sql.Int, req.body.fechaNacimiento)
-    .input("user", sql.VarChar, req.body.user)
-    .input("password", sql.VarChar, req.body.password)
-    .query('INSERT INTO MIY_USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@name, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;')
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "error could not create user"});
-    }
-    res.status(200).json({
-        message : "user create client creado",
-        id : result.recordset[0].idUser,
-        name : req.body.name,
-        password : req.body.password,
-        type : req.body.type,
-    });
-};
 
 
 

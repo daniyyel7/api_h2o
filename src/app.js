@@ -23,8 +23,6 @@ app.use(cartshoppingRoutes);
 app.use(productsRoutes);
 app.use(loginRoutes);
 
-
-
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

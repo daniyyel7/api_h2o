@@ -4,13 +4,13 @@ import { config } from 'dotenv';
 config();
 
 const dbSettings = {
-    user : "kaiomiyana",
-    password : "ssdIDS2024#",
-    server: "idsmiyana.database.windows.net",
+    user : "miyanabd",
+    password : "apoca320",
+    server: "35.202.95.134",
     database : "miyana",
     options : {
         encrypt: true,
-        trustServerCertificate: false
+        trustServerCertificate: true
     }
 }
 
