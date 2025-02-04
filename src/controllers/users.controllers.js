@@ -3,7 +3,7 @@ import sql from 'mssql'
 
 export const getTypeUsers = async (req,res) => {
     const pool = await getConnection()
-    const result = await pool.request().query("SELECT * FROM MIY_USERS_TYPE")
+    const result = await pool.request().query("SELECT * FROM H2O.USERS_TYPE")
     res.json(result.recordset)
 };
 
