@@ -9,7 +9,7 @@ export const addProduct = async( req, res) => {
     .input("client", sql.Int, req.body.client)
     .input("product", sql.Int, req.body.product)
     .input("quantity", sql.Int, req.body.quantity)
-    .query('INSERT INTO MIY_CART_SHOPPING (idClient, idProduct, quantity, idStatusProductCar) VALUES (@client, @product, @quantity, 1 ); SELECT SCOPE_IDENTITY() AS idCarShoping;');
+    .query('INSERT INTO H2O.CART_SHOPPING (idClient, idProduct, quantity, idStatusProductCar) VALUES (@client, @product, @quantity, 1 ); SELECT SCOPE_IDENTITY() AS idCarShoping;');
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ message : "error could not add product"});
     }
@@ -29,7 +29,7 @@ export const updateCarProduct = async ( req, res) => {
     .input("id", sql.Int, req.params.id)
     .input("quantity", sql.Int, req.body.quantity)
     .input("status", sql.Int, req.body.status)
-    .query("UPDATE MIY_CART_SHOPPING SET quantity = @quantity, idStatusProductCar = @status WHERE idCarShoping = @id");
+    .query("UPDATE H2O.CART_SHOPPING SET quantity = @quantity, idStatusProductCar = @status WHERE idCarShoping = @id");
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ message : "product not found not updated"});
     }
@@ -46,7 +46,7 @@ export const productsCart = async ( req, res) => {
     const result = await pool
     .request()
     .input("idClient", sql.Int, req.params.id)
-    .query(" SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct, subtotal = (MCS.quantity*PPT.price) FROM MIY_CART_SHOPPING MCS INNER JOIN (SELECT * FROM MIY_PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM MIY_CLIENTS_DATA MCD INNER JOIN MIY_USERS MU ON MCD.idUser = MU.idUser INNER JOIN MIY_USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient) ) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1 ");
+    .query(" SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct, subtotal = (MCS.quantity*PPT.price) FROM H2O.CART_SHOPPING MCS INNER JOIN (SELECT * FROM H2O.PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM H2O.CLIENTS_DATA MCD INNER JOIN H2O.USERS MU ON MCD.idUser = MU.idUser INNER JOIN H2O.USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient) ) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1 ");
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ message : "products not found"});
     }

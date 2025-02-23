@@ -4,10 +4,11 @@ import { config } from 'dotenv';
 config();
 
 const dbSettings = {
-    user : "miyanabd",
-    password : "apoca320",
-    server: "35.202.95.134",
-    database : "miyana",
+    user : "Desarrollo4",
+    password : "Desarrollo4",
+    server: "172.16.30.240/SAFYEULV",
+    //server: "187.157.41.168/SAFYEULV",
+    database : "IDS-APP",
     options : {
         encrypt: true,
         trustServerCertificate: true

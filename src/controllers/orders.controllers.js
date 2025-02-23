@@ -10,7 +10,7 @@ export const createOrder = async( req, res) => {
     .input("idAddress", sql.Int, req.body.address)
     .input("total", sql.Decimal, req.body.total)
     .input("idTypePayment", sql.Int, req.body.typepayment)
-    .query('INSERT INTO MIY_ORDERS ( idClient, dateOrder, idAddress, idStaff, total, idTypePayment) VALUES (@idClient, GETDATE() , @idAddress, 0, @total, @idTypePayment); SELECT SCOPE_IDENTITY() AS idOrder;');
+    .query('INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idStaff, total, idTypePayment) VALUES (@idClient, GETDATE() , @idAddress, 0, @total, @idTypePayment); SELECT SCOPE_IDENTITY() AS idOrder;');
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ message : "error could not add order"});
     }
@@ -32,7 +32,7 @@ export const Product = async ( req, res) => {
     .input("id", sql.Int, req.params.id)
     .input("quantity", sql.Int, req.body.quantity)
     .input("status", sql.Int, req.body.status)
-    .query("UPDATE MIY_CART_SHOPPING SET quantity = @quantity, idStatusProductCar = @status WHERE idCarShoping = @id");
+    .query("UPDATE H2O.CART_SHOPPING SET quantity = @quantity, idStatusProductCar = @status WHERE idCarShoping = @id");
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ message : "product not found not updated"});
     }
