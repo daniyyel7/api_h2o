@@ -90,15 +90,21 @@ export const createUserStatus = async (req,res) => {
     .input("name", sql.VarChar, req.body.name)
     .query('INSERT INTO H2O.USERS_STATUS (nameStatus) VALUES (@name); SELECT SCOPE_IDENTITY() AS idStatusUser;');
     if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "error could not create type"});
+        return res.status(404).json({ 
+            succes: false,
+            message : "error could not create user",
+            data: "",
+        });
     }
     res.status(200).json({
+        succes: true,
         message : "status of user create",
-        id : result.recordset[0].idStatusUser,
-        ame : req.body.name
+        data: {
+            id : result.recordset[0].idStatusUser,
+            ame : req.body.name
+        },
     });
 };
-
 
 //Crear un usuario
 export const createUser = async (req,res) => {
@@ -110,14 +116,21 @@ export const createUser = async (req,res) => {
     .input("type", sql.Int, req.body.type)
     .query('INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@name, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;');
     if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "error could not create user"});
+        return res.status(404).json({ 
+            succes: false,
+            message : "error could not create user",
+            data: "",
+        });
     }
     res.status(200).json({
+        succes: true,
         message : "user create",
-        id : result.recordset[0].idUser,
-        name : req.body.name,
-        password : req.body.password,
-        type : req.body.type,
+        data: {
+            id : result.recordset[0].idUser,
+            name : req.body.name,
+            password : req.body.password,
+            type : req.body.type,
+        }
     });
 };
 
@@ -133,15 +146,22 @@ export const updateUser = async (req,res) => {
     .input("status", sql.Int, req.body.status)
     .query("UPDATE H2O.USERS SET nameUser = @name, passwordUser = @password, idTypeUser = @type, idStatusUser = @status WHERE idUser = @id");
     if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "user not found not updated"});
+        return res.status(404).json({ 
+            succes: false,
+            message : "user not found not updated",
+            data: "",
+        });
     }
     return res.status(201).json({ 
+        succes: true,
         message : "user updated",
-        id : req.params.id, 
-        name : req.body.name,
-        password : req.body.password,
-        type : req.body.type,
-        status : req.body.status
+        data:{
+            id : req.params.id, 
+            name : req.body.name,
+            password : req.body.password,
+            type : req.body.type,
+            status : req.body.status,
+        },
     });
 };
 
