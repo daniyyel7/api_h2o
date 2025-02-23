@@ -13,21 +13,21 @@ import {
 const router = Router();
 
 //Todos los tipos de usuarios
-router.get('/typeUsers', getTypeUsers)
+router.get('/users/typeUsers', getTypeUsers)
 //Un tipo de usuarios
-router.get('/typeUser/:id', getTypeUser)
-router.post('/typeUser', createTypeUser)
-router.put('/typeUser/:id', updateType)
-router.delete('/typeUser/:id', deleteType)
+router.get('/users/typeUser/:id', getTypeUser)
+router.post('/users/typeUser', createTypeUser)
+router.put('/users/typeUser/:id', updateType)
+router.delete('/users/typeUser/:id', deleteType)
 
 //Crar un status para los usuarios
-router.post('/status', createUserStatus)
+router.post('/users/status', createUserStatus)
 
 //Crear un usuario
-router.post('/user', createUser)
+router.post('/users/create', createUser)
 
 //Actualizacion de usuario
-router.put('/user/:id', updateUser)
+router.put('/users/update/:id', updateUser)
 
 
 export default router;

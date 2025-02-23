@@ -6,7 +6,7 @@ import {
 const router = Router();
 
 //Crear un modulo para los usuarios
-router.post('/module', createModule)
+router.post('/module/create', createModule)
 
 
 export default router;
