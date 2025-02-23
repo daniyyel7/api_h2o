@@ -6,11 +6,11 @@ export const getLogin = async (req, res) => {
     const pool = await getConnection()
     const result = await pool
     .request()
-    .input("user", sql.VarChar, req.params.user)
-    .input("key", sql.VarChar, req.params.key)
-    .query("SELECT * FROM MIY_USERS WHERE nameUser = @user")
+    .input("user", sql.VarChar, req.body.user)
+    .input("key", sql.VarChar, req.body.password)
+    .query("SELECT * FROM H2O.USERS WHERE nameUser = @user ; SELECT SCOPE_IDENTITY() AS idUser;" )
     if (result.rowsAffected[0] === 0) {
-        return res.status(200).json({ message : "user not found", access : false  });
+        return res.status(200).json({ message : "user not found", access : false , data: "" });
     }
     else{
         const password = result.recordset[0].passwordUser;
@@ -18,16 +18,23 @@ export const getLogin = async (req, res) => {
         console.log(password);
         console.log(user);
         
-        if(req.params.key != password){
+        if(req.body.password != password){
             return res.status(200).json({ 
                 message : "incorrect  paswword", 
-                access : false 
+                access : false,
+                data : "",
             });
         }
         else{
+
+            const result2 = await pool
+            .query(`SELECT * FROM H2O.CLIENTS_DATA WHERE idUser = ${result.recordset[0].idUser}`)
+
+
             return res.status(200).json({ 
                 message : "acceso correcto", 
-                access : true 
+                access : true, 
+                data : result2.recordset[0],
             });
         }
     }
@@ -41,7 +48,7 @@ export const registerClient = async (req, res) => {
     const existe = await pool
     .request()
     .input("correo", sql.VarChar, req.body.correo)
-    .query("SELECT idUser FROM MIY_USERS WHERE nameUser = @correo");
+    .query("SELECT idUser FROM H2O.USERS WHERE nameUser = @correo");
     if (existe.rowsAffected[0] === 0) {
         
         // Validar que el correo contenga el dominio institucional
@@ -55,7 +62,7 @@ export const registerClient = async (req, res) => {
         .input("nameUser", sql.VarChar, req.body.correo)
         .input("password", sql.VarChar, req.body.password)
         .input("type", sql.Int, typeClient)
-        .query('INSERT INTO MIY_USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@nameUser, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;');
+        .query('INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@nameUser, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;');
         
         const idUser = result.recordset[0].idUser;
 
@@ -72,16 +79,31 @@ export const registerClient = async (req, res) => {
             .input("telefono", sql.VarChar, req.body.telefono)
             .input("fechaNacimiento", sql.Date, req.body.fechaNacimiento)
             .input("sexo", sql.Char, req.body.sexo)
-            .query('INSERT INTO MIY_CLIENTS_DATA (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, sexo) VALUES ( @idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, \'http://34.123.11.193:3000/public/image_profile.png\' , @fechaNacimiento, @sexo); SELECT SCOPE_IDENTITY() AS idClient;');
+            .query('INSERT INTO H2O.CLIENTS_DATA (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, sexo) VALUES ( @idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, \'https://h2o.isdapps.uk/public/image_profile.png\' , @fechaNacimiento, @sexo); SELECT SCOPE_IDENTITY() AS idClient;');
             
         return res.status(200).json({ 
-                message : "usuario creado correctamente"
+                succes: true,
+                message : "usuario creado correctamente",
+                data: {
+                    "idUser": sql.Int, idUser,
+                    "idClient": result.recordset[0].idClient,
+                    "nameClient": req.body.nombre,
+                    "firtsLastNameClient": req.body.apellidoPaterno,
+                    "secondLastNameClient": req.body.apellidoMaterno,
+                    "telephoneClient": req.body.telefono,
+                    "dateBirth": req.body.fechaNacimiento,
+                    "sexo": req.body.sexo
+                }
             });
     }
     else
     {
        
-        return res.status(200).json({ message : "el usuario ya existe" });    
+        return res.status(200).json({ 
+            succes: false,
+            message : "el usuario ya existe",
+            data:"",
+        });    
     }
    
 };
