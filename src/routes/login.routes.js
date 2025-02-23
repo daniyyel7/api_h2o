@@ -7,9 +7,9 @@ import {
 const router = Router();
 
 //Crear un modulo para los usuarios
-router.get('/login/:user/:key', getLogin);
+router.post('/auth/login', getLogin);
 
-router.post('/register', registerClient);
+router.post('/auth/register', registerClient);
 
 
 export default router;

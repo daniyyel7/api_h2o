@@ -8,7 +8,7 @@ export const getPriceProduct = async (req, res) => {
     .request()
     .input("id", sql.Int, req.params.id)
     .input("user", sql.Int, req.params.user)
-    .query("SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM MIY_PRODUCTS P INNER JOIN MIY_PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN MIY_PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN MIY_USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE PP.idProduct = @id AND PP.idTypeUser = @user")
+    .query("SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM H2O.PRODUCTS P INNER JOIN H2O.PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN H2O.PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN H2O.USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE PP.idProduct = @id AND PP.idTypeUser = @user")
     if (result.rowsAffected[0] === 0) {
         return res.status(404).json({ message :"type not found" });
     }
@@ -22,7 +22,7 @@ export const getProducts = async (req, res) => {
     const result = await pool
     .request()
     .input("user", sql.Int, req.params.user)
-    .query(" SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM MIY_PRODUCTS P INNER JOIN MIY_PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN MIY_PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN MIY_USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE PP.idTypeUser = @user ")
+    .query(" SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM H2O.PRODUCTS P INNER JOIN H2O.PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN H2O.PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN H2O.USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE PP.idTypeUser = @user ")
     if (result.rowsAffected[0] === 0) {
         return res.status(404).json({ message :"type not found" });
     }
@@ -33,7 +33,7 @@ export const getCategories = async (req, res) => {
     const pool = await getConnection()
     const result = await pool
     .request()
-    .query(" SELECT * FROM MIY_PRODUCTS_CATEGORIES ")
+    .query(" SELECT * FROM H2O.PRODUCTS_CATEGORIES ")
     if (result.rowsAffected[0] === 0) {
         return res.status(404).json({ message :"type not found" });
     }
@@ -47,7 +47,7 @@ export const getProductsCategorie = async (req, res) => {
     .request()
     .input("id", sql.Int, req.params.id)
     .input("user", sql.Int, req.params.user)
-    .query("SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM MIY_PRODUCTS P INNER JOIN MIY_PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN MIY_PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN MIY_USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE P.idCategorie = @id AND PP.idTypeUser = @user")
+    .query("SELECT P.idProduct, P.nameProduct, P.descriptionProduct, P.idCategorie, PC.nameCategorie, PP.price, P.urlImage FROM H2O.PRODUCTS P INNER JOIN H2O.PRODUCTS_PRICE PP ON P.idProduct = PP.idProduct INNER JOIN H2O.PRODUCTS_CATEGORIES PC ON P.idCategorie = PC.idCategorie INNER JOIN H2O.USERS_TYPE UT ON PP.idTypeUser = UT.idTypeUser WHERE P.idCategorie = @id AND PP.idTypeUser = @user")
     if (result.rowsAffected[0] === 0) {
         return res.status(404).json({ message :"type not found" });
     }
