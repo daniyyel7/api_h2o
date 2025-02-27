@@ -21,7 +21,7 @@ export const getLogin = async (req, res) => {
         if(req.body.password != password){
             return res.status(200).json({ 
                 message : "incorrect  paswword", 
-                access : false,
+                succes : false,
                 data : "",
             });
         }
@@ -33,7 +33,7 @@ export const getLogin = async (req, res) => {
 
             return res.status(200).json({ 
                 message : "acceso correcto", 
-                access : true, 
+                succes : true, 
                 data : result2.recordset[0],
             });
         }
