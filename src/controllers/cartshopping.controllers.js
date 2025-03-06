@@ -89,7 +89,7 @@ export const updateCarProduct = async ( req, res) => {
         return res.status(404).json({ 
             success: false,
             message : "product not found not updated",
-            data: "",
+            data: {},
         });
     }
     return res.status(201).json({ 
@@ -114,7 +114,7 @@ export const productsCart = async ( req, res) => {
         return res.status(404).json({ 
             success: false,
             message : "products not found",
-            data: "",
+            data: {},
         });
     }
 

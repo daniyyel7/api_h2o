@@ -10,7 +10,7 @@ const router = Router();
 //Crear un modulo para los usuarios
 router.post('/auth/login-client', clientLogin);
 
-router.post('/auth/login-staff', staffLogin);
+router.post('/auth/loginstaff', staffLogin);
 
 router.post('/auth/register', registerClient);
 

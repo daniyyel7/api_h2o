@@ -15,7 +15,7 @@ export const createProduct = async (req, res) => {
         return res.status(404).json({ 
             success: false,
             message :"product is not created" ,
-            data: "",
+            data: {},
         });
     }
     return res.json({
@@ -45,7 +45,7 @@ export const getInfoProduct = async (req, res) => {
         return res.status(404).json({ 
             success: false,
             message :"price not found",
-            data: "",
+            data: {},
         });
     }
     return res.json({
@@ -67,7 +67,7 @@ export const getProducts = async (req, res) => {
         return res.status(404).json({ 
             success: false,
             message :"products not found",
-            data: "",
+            data: {},
         });
     }
     return res.json(
@@ -87,7 +87,7 @@ export const getCategories = async (req, res) => {
         return res.status(404).json({ 
             success: false,
             message :"categorie not found",
-            data: "",
+            data: {},
          });
     }
     return res.json(
@@ -111,7 +111,7 @@ export const getProductsCategorie = async (req, res) => {
         return res.status(404).json({ 
             success: false,
             message :"type not found",
-            data: "",
+            data: {},
          });
     }
     return res.json(
