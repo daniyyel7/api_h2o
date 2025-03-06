@@ -1,11 +1,17 @@
 import {Router}  from 'express'
-import { 
-} from '../controllers/orders.controllers.js'
+import { ordersStatus,
+    createOrder
+ } from '../controllers/orders.controllers.js'
 
 const router = Router();
 
 //Crear un modulo para los usuarios
-router.get('/createOrder', )
+router.post('/orders/createOrder', createOrder )
+
+
+router.post('/orders/listDS', ordersStatus )
+
+
 
 
 export default router;
