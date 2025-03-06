@@ -2,7 +2,7 @@ import e from 'express';
 import {getConnection} from '../database/connection.js';
 import sql from 'mssql'
 
-export const getLogin = async (req, res) => {
+export const clientLogin = async (req, res) => {
     const pool = await getConnection()
     const result = await pool
     .request()
@@ -29,6 +29,45 @@ export const getLogin = async (req, res) => {
 
             const result2 = await pool
             .query(`SELECT * FROM H2O.CLIENTS_DATA WHERE idUser = ${result.recordset[0].idUser}`)
+
+
+            return res.status(200).json({ 
+                message : "acceso correcto", 
+                succes : true, 
+                data : result2.recordset[0],
+            });
+        }
+    }
+};
+
+
+export const staffLogin = async (req, res) => {
+    const pool = await getConnection()
+    const result = await pool
+    .request()
+    .input("user", sql.VarChar, req.body.user)
+    .input("key", sql.VarChar, req.body.password)
+    .query("SELECT * FROM H2O.USERS WHERE nameUser = @user ; SELECT SCOPE_IDENTITY() AS idUser;" )
+    if (result.rowsAffected[0] === 0) {
+        return res.status(200).json({ message : "user not found", access : false , data: "" });
+    }
+    else{
+        const password = result.recordset[0].passwordUser;
+        const user = result.recordset[0].nameUser;
+        console.log(password);
+        console.log(user);
+        
+        if(req.body.password != password){
+            return res.status(200).json({ 
+                message : "incorrect  paswword", 
+                succes : false,
+                data : "",
+            });
+        }
+        else{
+
+            const result2 = await pool
+            .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = ${result.recordset[0].idUser}`)
 
 
             return res.status(200).json({ 
