@@ -1,12 +1,11 @@
 import sql from 'mssql';
 import { config } from 'dotenv';
 
-config();
 
 const dbSettings = {
-    user : "Desarrollo4",
-    password : "Desarrollo4",
-    server: "172.16.30.240/SAFYEULV",
+    user: process.env.DBUSER,
+    password: process.env.DBPASSWORD,
+    server: process.env.DBSERVER,
     //server: "187.157.41.168/SAFYEULV",
     database : "IDS-APP",
     options : {
@@ -15,6 +14,7 @@ const dbSettings = {
     }
 }
 
+// Hace la conexión a la base de datos, si ocurre algo, se mostrara el error.
 export const getConnection = async ()=> {
     try {
         const pool = await sql.connect(dbSettings);
