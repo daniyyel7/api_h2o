@@ -1,5 +1,5 @@
 import { addProduct } from '../usecases/add_product_cartshopping.js';
-import { updateProduct } from '../usecases/update_product_cartshopping.jss';
+import { updateProduct } from '../usecases/update_product_cartshopping.js';
 import { fetchCartProducts } from '../usecases/get_cartshopping.js';
 
 export const addProductController = async (req, res) => {
