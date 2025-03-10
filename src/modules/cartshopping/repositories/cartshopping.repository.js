@@ -4,7 +4,7 @@ import sql from 'mssql';
 export const addProductToCart = async (client, product, quantity) => {
     const pool = await getConnection();
 
-    // Verificar si el producto ya está en el carrito del cliente
+    // Verifica si el producto ya está en el carrito del cliente
     const exist = await pool
         .request()
         .input("client", sql.Int, client)
@@ -40,7 +40,7 @@ export const addProductToCart = async (client, product, quantity) => {
             },
         };
     } else {
-        // Insertar producto en el carrito
+        // Inserta el producto en el carrito
         const result = await pool
             .request()
             .input("client", sql.Int, client)

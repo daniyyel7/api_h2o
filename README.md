@@ -4,7 +4,7 @@ Nota: Ejecute ctrl + shift + v para previsualizar el archivo .md con formato
 Este módulo es el encargado de gestionar todas las acciones que tengan que ver con el carrito de compras dentro de la API.
 Antes de hacer la refactorización había una dependencia entre la capa de presentación (el controlador) y la lógica de negocio, haciendo que el código 
 fuera difícil de mantener y no reutilizable.
-El objetivo de la asginación era mejorar la estructura utilizando la arquitectura limpia, así que se separaron las responsabilidades
+El objetivo de la asiginación era mejorar la estructura utilizando la arquitectura limpia, así que se separaron las responsabilidades
 en las capas ya definidas.
 
 ## Cambios realizados

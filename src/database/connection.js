@@ -6,8 +6,8 @@ config();
 const dbSettings = {
     user : "Desarrollo4",
     password : "Desarrollo4",
-    // server: "172.16.30.240/SAFYEULV",
-    server: "187.157.41.168/SAFYEULV",
+    server: "172.16.30.240/SAFYEULV",
+    // server: "187.157.41.168/SAFYEULV",
     database : "IDS-APP",
     options : {
         encrypt: true,
