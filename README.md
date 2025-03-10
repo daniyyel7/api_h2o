@@ -27,5 +27,15 @@ Se crearon las carpetas de:
 #### ProductsRepository
 Se crearon las consultas a la Db para traer la información pertinente y así usarlas en el services
 
+**Antes todo se encontraba en el controller**
 
 #### ProductsService
+Se hacen las validaciones para cada consulta existente y lanza un mensaje de erro en caso de no encontrar lo solicitado
+
+**Antes todo se encontraba en el controller**
+
+
+#### productsController
+
+
+

@@ -20,7 +20,7 @@ export const getPriceProduct = async (productId, userId) => {
         `);
 };
 
-// Obtener todos los productos para un usuario
+// Obtener todos los productos
 export const getProducts = async (userId) => {
     const pool = await getConnection();
     return await pool.request()
