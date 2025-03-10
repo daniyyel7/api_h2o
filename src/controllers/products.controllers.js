@@ -1,4 +1,3 @@
-// controllers/productController.js
 import * as productService from '../services/productsService.js';
 
 
@@ -15,7 +14,7 @@ export const getPriceProduct = async (req, res) => {
         return res.json(response.data);
     } catch (error) {
         console.error('Error en el servicce-getPriceProduct:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: 'Error del servicio' });
     }
 };
 
@@ -32,7 +31,7 @@ export const getProducts = async (req, res) => {
         return res.json(response.data);
     } catch (error) {
         console.error('Error en el service-getProducts:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: 'Error del servicio' });
     }
 };
 
@@ -48,7 +47,7 @@ export const getCategories = async (req, res) => {
         return res.json(response.data);
     } catch (error) {
         console.error('Error en getCategories:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: 'Error del servicio' });
     }
 };
 
@@ -65,7 +64,7 @@ export const getProductsCategorie = async (req, res) => {
         return res.json(response.data);
     } catch (error) {
         console.error('Error en getProductsCategorie:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        return res.status(500).json({ message: 'Error del servicio' });
     }
 };
 

@@ -1,5 +1,4 @@
-// repositories/productRepository.js
-const User = require("../database/connection.js");
+//const User = require("../database/connection.js");
 import { getConnection } from '../database/connection.js';
 import sql from 'mssql';
 
@@ -59,3 +58,6 @@ export const getProductsCategorie = async (categoryId, userId) => {
             WHERE P.idCategorie = @id AND PP.idTypeUser = @user
         `);
 };
+
+//  Cuando la consulta es sencilla con "" es más que suficiente.
+//  PEro si necesitas interpolación es mejor con ``

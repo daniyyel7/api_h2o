@@ -1,13 +1,9 @@
-// services/productService.js
+// Importaciones
 import * as productRepository from '../repositories/productsRepository';
 import { getPriceProductModel } from '../models/getPriceProductModels';
 import { getProductsMoldel } from '../models/getProductsModels';
 import { getCategoriesModel } from '../models/getCategoriesModel';
 import { getProductsCategorieModel } from '../models/getProductsCategorieModel';
-
-
-
-
 
 
 // Obeter el precio de un producto

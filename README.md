@@ -53,7 +53,9 @@ Aquí se encontraba toda la lógica en el mismo archivo, al separarlo se aplico 
 Es el responsable de definir las URLs o endpoints a los que los clientes (por ejemplo, una app frontend o Postman) pueden hacer peticiones, se reestrcuturo de acuerdo a lso cambios realizados en otras partes, de tal manera que halla buena acoplación
 
 #### Creación de modelos
+Se crearon los modelos, para manejar por medio de una estructura la información, esto asegura que lo que entra o sale entra de la api tenga un formato y contenido directo.
 
+Se creo un modelo por cada sonsulta o solicitud, el cual es usado en el service para el manejo de la respuesta y de como lo mandara al controller para ser utilizado.
 
 
 ---------------------
