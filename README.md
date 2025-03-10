@@ -36,6 +36,8 @@ Se hacen las validaciones para cada consulta existente y lanza un mensaje de err
 
 
 #### productsController
+Las peticiones de parte de la interfaz llegan aquí con sus respectivos parametros (req,res), los cuales se redireccionan al services para ser procesados y obtener una respuesta
+
 
 
 
