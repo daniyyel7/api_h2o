@@ -1,9 +1,10 @@
 // repositories/productRepository.js
+const User = require("../database/connection.js");
 import { getConnection } from '../database/connection.js';
 import sql from 'mssql';
 
-// Obtener precio de un producto para un usuario
-export const getPriceByProductAndUser = async (productId, userId) => {
+// Obtener precio de un producto
+export const getPriceProduct = async (productId, userId) => {
     const pool = await getConnection();
     return await pool.request()
         .input("id", sql.Int, productId)
@@ -20,7 +21,7 @@ export const getPriceByProductAndUser = async (productId, userId) => {
 };
 
 // Obtener todos los productos para un usuario
-export const getProductsByUserType = async (userId) => {
+export const getProducts = async (userId) => {
     const pool = await getConnection();
     return await pool.request()
         .input("user", sql.Int, userId)
@@ -36,14 +37,14 @@ export const getProductsByUserType = async (userId) => {
 };
 
 // Obtener todas las categorías
-export const getAllCategories = async () => {
+export const getCategories = async () => {
     const pool = await getConnection();
     return await pool.request()
         .query("SELECT * FROM H2O.PRODUCTS_CATEGORIES");
 };
 
 // Obtener productos por categoría y tipo de usuario
-export const getProductsByCategoryAndUser = async (categoryId, userId) => {
+export const getProductsCategorie = async (categoryId, userId) => {
     const pool = await getConnection();
     return await pool.request()
         .input("id", sql.Int, categoryId)

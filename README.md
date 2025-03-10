@@ -24,4 +24,8 @@ Se crearon las carpetas de:
 * Controllers = Manejan e interactuan con el exterior 
 
 
-#### 
+#### ProductsRepository
+Se crearon las consultas a la Db para traer la información pertinente y así usarlas en el services
+
+
+#### ProductsService
