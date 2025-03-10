@@ -8,9 +8,9 @@ import {
 const router = Router();
 
 //Insertar producto en carrito
-router.post('/addcar', addProduct)
-router.put('/updateCarProduct/:id', updateCarProduct)
-router.get('/cart/:id', productsCart)
+router.post('/cart/add', addProduct)
+router.put('/cart/updateProduct/:id', updateCarProduct)
+router.get('/cart/products/:id', productsCart)
 
 
 export default router;
