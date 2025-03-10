@@ -1,5 +1,5 @@
 import { pathToFileURL } from 'url';
-import {getConnection} from '../database/connection.js';
+import {getConnection} from '../../../database/connection.js';
 import sql from 'mssql'
 
 
