@@ -1,16 +1,14 @@
-import {Router}  from 'express'
-import { 
-    addProduct,
-    updateCarProduct,
-    productsCart
-} from '../controllers/cartshopping.controllers.js'
+import express from "express";
+import {
+  addProductController,
+  updateProductController,
+  getCartProductsController,
+} from "../controllers/cartshopping.controllers.js";
 
-const router = Router();
+const router = express.Router();
 
-//Insertar producto en carrito
-router.post('/cart/add', addProduct)
-router.put('/cart/updateProduct/:id', updateCarProduct)
-router.get('/cart/products/:id', productsCart)
-
+router.post("/cart", addProductController);
+router.put("/cart", updateProductController);
+router.get("/cart/:userId", getCartProductsController);
 
 export default router;
