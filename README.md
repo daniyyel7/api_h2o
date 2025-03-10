@@ -28,6 +28,13 @@ Se crearon las carpetas de:
 * Repositories = Solo acceden a la base de datos, o la modifican.
 * Services = Gestionan la lógica de negocio como validaciones o reglas y como responder al controlador.
 * Controllers = Manejan e interactuan con el exterior con respecto a las peticiones http.
+* Models = Estructura con la que se manejaran los datos para ser usados. 
+
+
+#### Creación de modelos
+Se crearon los modelos, para manejar por medio de una estructura la información, esto asegura que lo que entra o sale entra de la api tenga un formato y contenido directo.
+
+Se creo un modelo por cada sonsulta o solicitud, el cual es usado en el service para el manejo de la respuesta y de como lo mandara al controller para ser utilizado.
 
 
 #### ProductsRepository
@@ -42,7 +49,6 @@ Se hacen las validaciones para cada consulta existente y lanza un mensaje de err
 **Antes todo se encontraba en el controller**
 
 
-
 #### productsController
 Las peticiones de parte de la interfaz llegan aquí con sus respectivos parametros (req,res), los cuales se redireccionan al services para ser procesados y obtener una respuesta.
 
@@ -50,18 +56,35 @@ Aquí se encontraba toda la lógica en el mismo archivo, al separarlo se aplico 
 
 
 #### ProductsRoutes
-Es el responsable de definir las URLs o endpoints a los que los clientes (por ejemplo, una app frontend o Postman) pueden hacer peticiones, se reestrcuturo de acuerdo a lso cambios realizados en otras partes, de tal manera que halla buena acoplación
-
-#### Creación de modelos
-Se crearon los modelos, para manejar por medio de una estructura la información, esto asegura que lo que entra o sale entra de la api tenga un formato y contenido directo.
-
-Se creo un modelo por cada sonsulta o solicitud, el cual es usado en el service para el manejo de la respuesta y de como lo mandara al controller para ser utilizado.
+Es el responsable de definir las URLs o endpoints a los que los clientes (por ejemplo, una app frontend o Postman) pueden hacer peticiones, se reestructuro de acuerdo a los cambios realizados en otras partes, de tal manera que halla buena acoplación
 
 
----------------------
+
+#### Retos enfrentados
+* Comprender los conceptos que deben ser utilizados para aplicar correctamente la arquitectura limpia.
+* Manejo de errores al realizar cambios.
+* Refactorizar la Api aplicando las capas de arquitectura.
+* Realizar una documentación clara para cualquier persona que desee revisar proyecto.
+* Implementar con el Frontend
+* 
+
+
+#### Beneficios de la refactorización
+* Mayor control sobre el código
+* Mantenible
+* Limpio
+* Cambios rápidos 
+* Mayor reutilización de código
+* Testeo Fácil
+* Escalable
+
+--------------------------
 ##### Ejemplos y guías recopilados de:
-* 
-* 
-* 
+[Tutorial de Tutorial Markdown](https://tutorialmarkdown.com)
+[Guía definitiva de Markdown](https://neoguias.com/markdown)
+[¿Qué es Clean Architecture?](https://www.youtube.com/watch?v=EI4nOsec2Ao)
+[CLEAN ARCHITECTURE en Node con TypeScript](https://www.youtube.com/watch?v=497L4-LhvdM)
+[Apuntes de clase]()
+
 
 
