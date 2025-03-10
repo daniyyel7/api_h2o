@@ -1,5 +1,11 @@
 # Documentación de cambios de la refactorización de la Api.
 
+#### Problemas del código original
+* No estaba distribuido por capas
+* Todo se encontraba en un mismo archivo, contraseñas, lógica, el manejo de las respuestas, las consultas a la DB
+* No existia documentación
+* Algunos modulos o funciones no tenian nombres adecuados para lo que hacian
+* 
 
 #### Se inicializa el archivo README
 Este archivo contiene la documentación de cambios, configuraciones y actualizaciones de la api.
@@ -38,7 +44,10 @@ Se hacen las validaciones para cada consulta existente y lanza un mensaje de err
 #### productsController
 Las peticiones de parte de la interfaz llegan aquí con sus respectivos parametros (req,res), los cuales se redireccionan al services para ser procesados y obtener una respuesta
 
+
 #### ProductsRoutes
+Es el responsable de definir las URLs o endpoints a los que los clientes (por ejemplo, una app frontend o Postman) pueden hacer peticiones, se reestrcuturo de acuerdo a lso cambios realizados en otras partes. 
+De tal manera que halla buena acoplación
 
 
 
