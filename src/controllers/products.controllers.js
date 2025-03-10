@@ -1,7 +1,7 @@
 import {getConnection} from '../database/connection.js';
 import sql from 'mssql'
 
-
+ 
 export const getPriceProduct = async (req, res) => {
     const pool = await getConnection()
     const result = await pool

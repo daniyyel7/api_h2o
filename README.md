@@ -15,6 +15,13 @@ Se utiliza para almacenar variables de entorno, que son valores que pueden cambi
 En la carpeta database se modifico el archivo **connection** usando los valores del .env el cual contiene la información pertinente de la Db en uso, de esa forma tenemos una separación de responsabilidades.
 
 
-#### Sepración de responsabilidades
+#### Separación de responsabilidades
+
+Se crearon las carpetas de: 
+
+* Repositories = Solo acceden a la base de datos, o la modifican 
+* Services = Gestionan la lógica de negocio como validaciones o reglas y como responder al controlador
+* Controllers = Manejan e interactuan con el exterior 
 
 
+#### 
