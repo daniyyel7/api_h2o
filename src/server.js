@@ -6,4 +6,8 @@ config();
 const port = process.env.PORT || 4000;
 
 //Puerto que escucha
-app.listen(port,()=> console.log("Server listening on port",port));
+app.listen(port,()=> console.log("Server listening on port", port));
+
+app.get("/", (req, res) => {
+    res.send("Servidor funcionando correctamente en el puerto seleccionado");
+});

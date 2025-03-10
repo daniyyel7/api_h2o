@@ -1,33 +1,16 @@
-import { addProduct } from '../usecases/add_product_cartshopping.js';
-import { updateProduct } from '../usecases/update_product_cartshopping.js';
-import { fetchCartProducts } from '../usecases/get_cartshopping.js';
+import * as cartRepo from '../repositories/cartshopping.repository.js';
 
-export const addProductController = async (req, res) => {
-    try {
-        const { userId, productId, quantity } = req.body;
-        await addProduct(userId, productId, quantity);
-        res.json({ success: true, message: "Product added to cart" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+export const addProductToCart = async (req, res) => {
+    const response = await cartRepo.addProductToCart(req.body.client, req.body.product, req.body.quantity);
+    return res.status(response.success ? 200 : 500).json(response);
 };
 
-export const updateProductController = async (req, res) => {
-    try {
-        const { userId, productId, quantity } = req.body;
-        await updateProduct(userId, productId, quantity);
-        res.json({ success: true, message: "Cart updated" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+export const updateCartProduct = async (req, res) => {
+    const response = await cartRepo.updateCartProduct(req.params.id, req.body.quantity, req.body.status);
+    return res.status(response.success ? 201 : 404).json(response);
 };
 
-export const getCartProductsController = async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const products = await fetchCartProducts(userId);
-        res.json({ success: true, data: products.recordset });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
+export const productsCart = async (req, res) => {
+    const response = await cartRepo.productsCart(req.params.id);
+    return res.status(response.success ? 200 : 404).json(response);
 };
