@@ -2,7 +2,6 @@ import { pathToFileURL } from 'url';
 import {getConnection} from '../database/connection.js';
 import sql from 'mssql'
 
-
 export const addProduct = async( req, res) => {
     const pool = await getConnection();
 
@@ -78,12 +77,17 @@ export const addProduct = async( req, res) => {
 };
 
 export const updateCarProduct = async ( req, res) => {
+
+    let status = req.body.status
+    if(req.body.quantity === 0){
+        status = 4
+    }
     const pool = await getConnection()
     const result = await pool
     .request()
     .input("id", sql.Int, req.params.id)
     .input("quantity", sql.Int, req.body.quantity)
-    .input("status", sql.Int, req.body.status)
+    .input("status", sql.Int, status)
     .query("UPDATE H2O.CART_SHOPPING SET quantity = @quantity, idStatusProductCar = @status WHERE idCarShoping = @id");
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ 
@@ -98,7 +102,7 @@ export const updateCarProduct = async ( req, res) => {
         data:{
             id : req.params.id, 
             quantity : req.body.quantity, 
-            status : req.body.status,
+            status : status,
         },
     });
 };
@@ -108,7 +112,7 @@ export const productsCart = async ( req, res) => {
     const result = await pool
     .request()
     .input("idClient", sql.Int, req.params.id)
-    .query("SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct FROM H2O.CART_SHOPPING MCS INNER JOIN (SELECT * FROM H2O.PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM H2O.CLIENTS_DATA MCD INNER JOIN H2O.USERS MU ON MCD.idUser = MU.idUser INNER JOIN H2O.USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient)) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1;");
+    .execute(`H2O.STP_CART_BY_CLIENT`);
     
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ 

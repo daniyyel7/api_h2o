@@ -114,23 +114,7 @@ export const ordersStatus = async (req, res) => {
       .request()
       .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
       .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
-      .query(`
-                SELECT
-                    O.idOrder,
-                    CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
-                    OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-dd-MM HH:mm') AS dateOrder, 
-                    CONCAT_WS(' ', CA.street, CA.outerNumber, CA.insideNumber, ZC.colonia, ZC.ciudad, ZC.estado, ZC.zipCode) AS address,
-                    P.nameProduct, OD.quantity, OD.priceProduct, OD.subtotal, O.total
-                FROM H2O.ORDERS O
-                INNER JOIN H2O.ORDERS_DETAIL OD ON O.idOrder = OD.idOrder
-                INNER JOIN H2O.ORDERS_TYPE_PAYMENT OTP ON O.idTypePayment = OTP.idTypePayment
-                INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
-                INNER JOIN H2O.PRODUCTS P ON OD.idProduct = P.idProduct
-                INNER JOIN H2O.CLIENTS_ADREESSES CA ON O.idAddress = CA.idAddress
-                INNER JOIN H2O.ZIP_CODE ZC ON CA.idZipCode = ZC.idZipCode
-                INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
-                WHERE CAST(O.dateOrder AS DATE) = @fecha AND O.idOrderStatus = @status
-            `);
+      .execute(`H2O.STP_LIST_ORDERS_BY_DAY_STATUS`);
 
     // Verificar si se encontraron resultados
     if (result.recordset.length === 0) {
