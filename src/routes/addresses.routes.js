@@ -2,7 +2,9 @@ import {Router}  from 'express'
 import { 
     allZipCode,
     createAdresses,
-    addressesByClient
+    addressesByClient,
+    updateAddress,
+    deleteAddress
 } from '../controllers/addresses.controllers.js'
 
 const router = Router();
@@ -11,6 +13,8 @@ const router = Router();
 router.get('/addresses/zipCode', allZipCode)
 router.post('/addresses/create', createAdresses)
 router.get('/addresses/:id', addressesByClient )
+router.put('/addresses/:idAddress', updateAddress )
+router.delete('/addresses/:idAddress', deleteAddress )
 //router.get('/cart/products/:id', productsCart)
 
 
