@@ -22,7 +22,7 @@ export const getTypeUser = async (req, res) => {
         return res.status(404).json({ message :"type not found" });
     }
     return res.status(200).json({
-        succes: true,
+        success: true,
         message: 'Tipo de usaurio',
         data: result.recordset[0]});
 };
@@ -37,7 +37,7 @@ export const createTypeUser = async( req, res) => {
         return res.status(404).json({ message : "error could not create type"});
     }
     res.status(200).json({
-        succes: true,
+        success: true,
         message : "type of user create",
         data: {
             id : result.recordset[0].idTypeUser,
@@ -57,7 +57,7 @@ export const updateType = async ( req, res) => {
         return res.status(404).json({ message : "type not found not updated"});
     }
     return res.status(201).json({ 
-        succes: true,
+        success: true,
         message : "type updated",
         data:{
             id : req.params.id, 
@@ -76,7 +76,7 @@ export const deleteType =  async( req, res) => {
         return res.status(404).json({ message : "User not foun not deleted"})
     }
     return res.status(200).json({ 
-        succes: true,
+        success: true,
         message : "user deleted",
         data:""
     })
@@ -91,13 +91,13 @@ export const createUserStatus = async (req,res) => {
     .query('INSERT INTO H2O.USERS_STATUS (nameStatus) VALUES (@name); SELECT SCOPE_IDENTITY() AS idStatusUser;');
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ 
-            succes: false,
+            success: false,
             message : "error could not create user",
-            data: "",
+            data: {},
         });
     }
     res.status(200).json({
-        succes: true,
+        success: true,
         message : "status of user create",
         data: {
             id : result.recordset[0].idStatusUser,
@@ -117,13 +117,13 @@ export const createUser = async (req,res) => {
     .query('INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@name, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;');
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ 
-            succes: false,
+            success: false,
             message : "error could not create user",
-            data: "",
+            data: {},
         });
     }
     res.status(200).json({
-        succes: true,
+        success: true,
         message : "user create",
         data: {
             id : result.recordset[0].idUser,
@@ -147,13 +147,13 @@ export const updateUser = async (req,res) => {
     .query("UPDATE H2O.USERS SET nameUser = @name, passwordUser = @password, idTypeUser = @type, idStatusUser = @status WHERE idUser = @id");
     if( result.rowsAffected[0] === 0){
         return res.status(404).json({ 
-            succes: false,
+            success: false,
             message : "user not found not updated",
-            data: "",
+            data: {},
         });
     }
     return res.status(201).json({ 
-        succes: true,
+        success: true,
         message : "user updated",
         data:{
             id : req.params.id, 

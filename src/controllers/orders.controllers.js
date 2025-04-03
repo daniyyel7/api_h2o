@@ -17,7 +17,7 @@ export const createOrder = async (req, res) => {
     return res.status(404).json({
       success: false,
       message: "products not found",
-      data: "",
+      data: {},
     });
   }
 
@@ -114,23 +114,7 @@ export const ordersStatus = async (req, res) => {
       .request()
       .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
       .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
-      .query(`
-                SELECT
-                    O.idOrder,
-                    CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
-                    OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-dd-MM HH:mm') AS dateOrder, 
-                    CONCAT_WS(' ', CA.street, CA.outerNumber, CA.insideNumber, ZC.colonia, ZC.ciudad, ZC.estado, ZC.zipCode) AS address,
-                    P.nameProduct, OD.quantity, OD.priceProduct, OD.subtotal, O.total
-                FROM H2O.ORDERS O
-                INNER JOIN H2O.ORDERS_DETAIL OD ON O.idOrder = OD.idOrder
-                INNER JOIN H2O.ORDERS_TYPE_PAYMENT OTP ON O.idTypePayment = OTP.idTypePayment
-                INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
-                INNER JOIN H2O.PRODUCTS P ON OD.idProduct = P.idProduct
-                INNER JOIN H2O.CLIENTS_ADREESSES CA ON O.idAddress = CA.idAddress
-                INNER JOIN H2O.ZIP_CODE ZC ON CA.idZipCode = ZC.idZipCode
-                INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
-                WHERE CAST(O.dateOrder AS DATE) = @fecha AND O.idOrderStatus = @status
-            `);
+      .execute(`H2O.STP_LIST_ORDERS_BY_DAY_STATUS`);
 
     // Verificar si se encontraron resultados
     if (result.recordset.length === 0) {
@@ -186,6 +170,180 @@ export const ordersStatus = async (req, res) => {
         totalOrders: totalOrders, // Total de órdenes únicas
         orders: groupedOrders, // Detalles de las órdenes
       },
+    });
+  } catch (error) {
+    // Manejo de errores
+    console.error("Error fetching order status:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+export const listOrdersAdmin = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    // Consulta para obtener las órdenes con fecha y estado
+    const result = await pool
+      .request()
+      .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
+      .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
+      .query(`SELECT
+    O.idOrder,
+    CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
+    UT.nameType,
+    OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd') AS dateOrder
+FROM H2O.ORDERS O
+    INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
+    INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
+    INNER JOIN H2O.USERS U ON CD.idUser = U.idUser
+    INNER JOIN H2O.USERS_TYPE UT ON U.idTypeUser = UT.idTypeUser
+WHERE CAST(O.dateOrder AS DATE) = @fecha 
+    AND (@status = 0 OR O.idOrderStatus = @status);`);
+
+    // Verificar si se encontraron resultados
+    if (result.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for the given date and status" });
+    }
+
+    // Devolver el JSON con el número total de órdenes y las órdenes
+    return res.status(200).json({
+      success: true,
+      message: "Lista de ordenes",
+      data: result.recordset,
+    });
+  } catch (error) {
+    // Manejo de errores
+    console.error("Error fetching order status:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+export const detailOrder = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    // Consulta para obtener las órdenes con fecha y estado
+    const result = await pool
+      .request()
+      .input("idOrder", sql.Int, req.params.idOrder) // Fecha como parámetro
+      .query(` SELECT
+        O.idOrder,
+        CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
+        UT.nameType,
+        OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd HH:mm') AS dateOrder,
+        CASE 
+        WHEN O.dateDelivery IS NULL THEN 'Sin Fecha' 
+        ELSE FORMAT(O.dateDelivery, 'yyyy-MM-dd HH:mm') 
+    END AS dateDelivery,
+        CA.descriptionAddress,
+        CASE 
+        WHEN O.commentOrder IS NULL THEN 'Sin Comentario' 
+        ELSE O.commentOrder 
+    END AS commentOrder,
+        CONCAT_WS(' ', CA.street, CA.outerNumber, CA.insideNumber, ZC.colonia, ZC.ciudad, ZC.estado, ZC.zipCode) AS address,
+        P.nameProduct, OD.quantity, OD.priceProduct, OD.subtotal, O.total, OSP.nameStatusPayment
+    FROM H2O.ORDERS O
+        INNER JOIN H2O.ORDERS_DETAIL OD ON O.idOrder = OD.idOrder
+        INNER JOIN H2O.ORDERS_TYPE_PAYMENT OTP ON O.idTypePayment = OTP.idTypePayment
+        INNER JOIN H2O.ORDERS_STATUS_PAYMENT OSP ON O.idStatusPayment = OSP.idStatusPayment
+        INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
+        INNER JOIN H2O.PRODUCTS P ON OD.idProduct = P.idProduct
+        INNER JOIN H2O.CLIENTS_ADREESSES CA ON O.idAddress = CA.idAddress
+        INNER JOIN H2O.ZIP_CODE ZC ON CA.idZipCode = ZC.idZipCode
+        INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
+        INNER JOIN H2O.USERS U ON CD.idUser = U.idUser
+        INNER JOIN H2O.USERS_TYPE UT ON U.idTypeUser = UT.idTypeUser
+    WHERE O.idOrder = @idOrder
+`);
+
+    // Verificar si se encontraron resultados
+    if (result.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for the given date and status" });
+    }
+
+    // Devolver el JSON con el número total de órdenes y las órdenes
+    return res.status(200).json({
+      success: true,
+      message: "Lista de ordenes",
+      data: {
+        idOrder:result.recordset[0].idOrder,
+        folio:result.recordset[0].idOrder,
+        cliente: result.recordset[0].nameComplete,
+        fecha: result.recordset[0].dateOrder,
+        fechaEntrega: result.recordset[0].dateDelivery,
+        nombreDireccion: result.recordset[0].descriptionAddress,
+        direccion: result.recordset[0].address,
+        total: result.recordset[0].total,
+        estadoPago: result.recordset[0].nameStatusPayment,
+        comentario: result.recordset[0].commentOrder,
+        productos: result.recordset.map(row => ({
+          nombre: row.nameProduct,
+          cantidad: row.quantity,
+          precio: row.priceProduct,
+          subtotal: row.subtotal
+        }))
+      }
+    });
+  } catch (error) {
+    // Manejo de errores
+    console.error("Error fetching order status:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+export const listOrdersByClient = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    // Consulta para obtener las órdenes con fecha y estado
+    const result = await pool
+      .request()
+      .input("idClient", sql.Int, req.params.idClient) // Fecha como parámetro
+      .query(`SELECT
+    O.idOrder,
+    O.idOrder AS folio,
+    FORMAT(O.dateOrder, 'yyyy-MM-dd') AS dateOrder,
+    CA.descriptionAddress,
+     CASE 
+        WHEN O.dateDelivery IS NULL THEN 'Sin Fecha' 
+        ELSE FORMAT(O.dateDelivery, 'yyyy-MM-dd') 
+    END AS dateDelivery,
+    CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
+    OS.nameOrderStatus,
+    O.total
+FROM H2O.ORDERS O
+    INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
+    INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
+    INNER JOIN H2O.USERS U ON CD.idUser = U.idUser
+    INNER JOIN H2O.CLIENTS_ADREESSES CA ON O.idAddress = CA.idAddress
+    INNER JOIN H2O.ZIP_CODE ZC ON CA.idZipCode = ZC.idZipCode
+WHERE O.idClient = @idClient`);
+
+    // Verificar si se encontraron resultados
+    if (result.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No orders found for the given date and status" });
+    }
+
+    // Devolver el JSON con el número total de órdenes y las órdenes
+    return res.status(200).json({
+      success: true,
+      message: "Lista de ordenes",
+      data: result.recordset,
     });
   } catch (error) {
     // Manejo de errores
