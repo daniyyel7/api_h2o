@@ -276,8 +276,8 @@ export const detailOrder = async (req, res) => {
       success: true,
       message: "Lista de ordenes",
       data: {
-        idOrder:result.recordset[0].idOrder,
-        folio:result.recordset[0].idOrder,
+        idOrder: result.recordset[0].idOrder,
+        folio: result.recordset[0].idOrder,
         cliente: result.recordset[0].nameComplete,
         fecha: result.recordset[0].dateOrder,
         fechaEntrega: result.recordset[0].dateDelivery,
@@ -286,13 +286,13 @@ export const detailOrder = async (req, res) => {
         total: result.recordset[0].total,
         estadoPago: result.recordset[0].nameStatusPayment,
         comentario: result.recordset[0].commentOrder,
-        productos: result.recordset.map(row => ({
+        productos: result.recordset.map((row) => ({
           nombre: row.nameProduct,
           cantidad: row.quantity,
           precio: row.priceProduct,
-          subtotal: row.subtotal
-        }))
-      }
+          subtotal: row.subtotal,
+        })),
+      },
     });
   } catch (error) {
     // Manejo de errores
@@ -303,6 +303,87 @@ export const detailOrder = async (req, res) => {
     });
   }
 };
+
+export const cancelOrder = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .query(
+      `UPDATE H2O.ORDERS
+      SET idOrderStatus = 6
+      WHERE idOrder = @idOrder`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "order not found not canceled" });
+  }
+
+  const result2 = await pool
+    .request()
+    .input("idOrder", sql.Int, req.params.idOrder)
+    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+  return res.status(201).json({
+    success: true,
+    message: "orden cancelada por el usuario",
+    data:{ }
+  });
+};
+
+export const autoriceOrder = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .query(
+      `UPDATE H2O.ORDERS
+      SET idOrderStatus = 2
+      WHERE idOrder = @idOrder`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "order not found not canceled" });
+  }
+
+  const result2 = await pool
+    .request()
+    .input("idOrder", sql.Int, req.params.idOrder)
+    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+
+  return res.status(201).json({
+    success: true,
+    message: "orden autorizada por la planta",
+    data:{ }
+  });
+};
+
+export const rejectedOrder = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .input("commentOrder", sql.NVarChar, req.body.commentOrder)
+    .query(
+      `UPDATE H2O.ORDERS
+      SET idOrderStatus = 5, commentOrderAdmin = @commentOrder
+      WHERE idOrder = @idOrder`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "order not found not canceled" });
+  }
+
+  const result2 = await pool
+    .request()
+    .input("idOrder", sql.Int, req.params.idOrder)
+    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+  return res.status(201).json({
+    success: true,
+    message: "orden rechazada por la planta purificadora",
+    data:{ }
+  });
+};
+
 
 export const listOrdersByClient = async (req, res) => {
   try {
