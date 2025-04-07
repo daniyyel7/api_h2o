@@ -20,7 +20,7 @@ export const addProduct = async( req, res) => {
         console.log(exist.recordset)
 
     if (exist.recordset.length > 0) {
-        const newQuantity = exist.recordset[0].quantity + req.body.quantity;
+        const newQuantity = Number(exist.recordset[0].quantity) + Number(req.body.quantity);
         await pool
             .request()
             .input("quantity", sql.Int, newQuantity)

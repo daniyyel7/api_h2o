@@ -31,8 +31,10 @@ export const createOrder = async (req, res) => {
     .input("idAddress", sql.Int, req.body.address)
     .input("total", sql.Decimal, req.body.total)
     .input("idTypePayment", sql.Int, req.body.typepayment)
+    .input("commentOrder", sql.NVarChar, req.body.comment)
+    .input("dateDelivery", sql.NVarChar, req.body.dateDelivery)
     .query(
-      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment); SELECT SCOPE_IDENTITY() AS idOrder;"
+      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment, commentOrder, dateDelivery, idStatusPayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment, @commentOrder, @dateDelivery, 1); SELECT SCOPE_IDENTITY() AS idOrder;"
     );
 
   //Validar la orden se insertara correctamente
@@ -327,6 +329,64 @@ export const cancelOrder = async (req, res) => {
     success: true,
     message: "orden cancelada por el usuario",
     data:{ }
+  });
+};
+
+export const undeliveredOrder = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .input("commentOrder", sql.NVarChar, req.body.commentOrder)
+    .input("statusPago", sql.Int,req.body.statusPago)
+    .query(
+      `UPDATE H2O.ORDERS
+      SET idOrderStatus = 7, commentOrderDelivery = @commentOrder, idStatusPayment = @statusPago
+      WHERE idOrder = @idOrder`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "order not found not delivery" });
+  }
+
+  const result2 = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+
+  return res.status(201).json({
+    success: true,
+    message: "orden entregada por la planta",
+    data: result2.recordset
+  });
+};
+
+export const deliveryOrder  = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .input("commentOrder", sql.NVarChar, req.body.commentOrder)
+    .input("statusPago", sql.Int,req.body.statusPago)
+    .query(
+      `UPDATE H2O.ORDERS
+      SET idOrderStatus = 4, commentOrderDelivery = @commentOrder, idStatusPayment = @statusPago
+      WHERE idOrder = @idOrder`
+    );
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "order not found not delivery" });
+  }
+
+  const result2 = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+s
+  return res.status(201).json({
+    success: true,
+    message: "orden entregada por la planta",
+    data: result2.recordset
   });
 };
 
