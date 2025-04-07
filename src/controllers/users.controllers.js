@@ -11,7 +11,6 @@ export const getTypeUsers = async (req,res) => {
     })
 };
 
-
 export const getTypeUser = async (req, res) => {
     const pool = await getConnection()
     const result = await pool
@@ -109,6 +108,26 @@ export const createUserStatus = async (req,res) => {
 //Crear un usuario
 export const createUser = async (req,res) => {
     const pool = await getConnection();
+
+    
+
+    const existe = await pool
+    .request()
+    .input("nameUser", sql.VarChar, req.body.nameUser)
+    .query("SELECT idUser FROM H2O.USERS WHERE nameUser = @nameUser");
+
+    if (existe.rowsAffected[0] != 0) {
+        return res.status(404).json({ 
+            success: false,
+            message : "error user exist",
+            data: {},
+        });
+    }
+
+
+
+
+
     const result = await pool
     .request()
     .input("name", sql.VarChar, req.body.name)
@@ -133,6 +152,78 @@ export const createUser = async (req,res) => {
         }
     });
 };
+
+//Crea un registo de cliente, publico general o insitucional
+export const registerClient = async (req, res) => {
+  const pool = await getConnection();
+
+  //validamos si existe ya un registro del correo electronico
+  const existe = await pool
+    .request()
+    .input("correo", sql.VarChar, req.body.correo)
+    .query("SELECT idUser FROM H2O.USERS WHERE nameUser = @correo");
+  if (existe.rowsAffected[0] === 0) {
+    // Validar que el correo contenga el dominio institucional
+    let typeClient = 5;
+    if (req.body.correo && /@ulv\.edu\.mx$/.test(req.body.correo)) {
+      typeClient = 4;
+    }
+
+    const result = await pool
+      .request()
+      .input("nameUser", sql.VarChar, req.body.correo)
+      .input("password", sql.VarChar, req.body.password)
+      .input("type", sql.Int, typeClient)
+      .query(
+        "INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@nameUser, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;"
+      );
+
+    const idUser = result.recordset[0].idUser;
+
+    if (!idUser) {
+      return res.status(500).json({ message: "Error al crear el usuario" });
+    }
+
+    await pool
+      .request()
+      .input("idUser", sql.Int, idUser)
+      .input("nombre", sql.VarChar, req.body.nombre)
+      .input("apellidoPaterno", sql.VarChar, req.body.apellidoPaterno)
+      .input("apellidoMaterno", sql.VarChar, req.body.apellidoMaterno)
+      .input("telefono", sql.VarChar, req.body.telefono)
+      .input("fechaNacimiento", sql.Date, req.body.fechaNacimiento)
+      .input("sexo", sql.Char, req.body.sexo)
+      .query(
+        "INSERT INTO H2O.CLIENTS_DATA (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, sexo) VALUES ( @idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, 'https://h2o.isdapps.uk/public/image_profile.png' , @fechaNacimiento, @sexo); SELECT SCOPE_IDENTITY() AS idClient;"
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "usuario creado correctamente",
+      data: {
+        idUser: sql.Int,
+        idUser,
+        idClient: result.recordset[0].idClient,
+        nameClient: req.body.nombre,
+        firtsLastNameClient: req.body.apellidoPaterno,
+        secondLastNameClient: req.body.apellidoMaterno,
+        telephoneClient: req.body.telefono,
+        dateBirth: req.body.fechaNacimiento,
+        sexo: req.body.sexo,
+      },
+    });
+  } else {
+    return res.status(200).json({
+      success: false,
+      message: "el usuario ya existe",
+      data: {},
+    });
+  }
+};
+
+
+
+
 
 //Actualizar estatus de un usuario
 export const updateUser = async (req,res) => {

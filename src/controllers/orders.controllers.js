@@ -9,7 +9,7 @@ export const createOrder = async (req, res) => {
     .request()
     .input("idClient", sql.Int, req.body.client)
     .query(
-      "SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct FROM H2O.CART_SHOPPING MCS INNER JOIN (SELECT * FROM H2O.PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM H2O.CLIENTS_DATA MCD INNER JOIN H2O.USERS MU ON MCD.idUser = MU.idUser INNER JOIN H2O.USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient)) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1;"
+      "SELECT MCS.idProduct, MCS.quantity, PPT.price AS priceProduct, PPT.idTypeUser FROM H2O.CART_SHOPPING MCS INNER JOIN (SELECT * FROM H2O.PRODUCTS_PRICE WHERE idTypeUser = (SELECT MUT.idTypeUser FROM H2O.CLIENTS_DATA MCD INNER JOIN H2O.USERS MU ON MCD.idUser = MU.idUser INNER JOIN H2O.USERS_TYPE MUT ON MU.idTypeUser = MUT.idTypeUser WHERE MCD.idClient = @idClient)) PPT ON MCS.idProduct = PPT.idProduct WHERE MCS.idClient = @idClient AND MCS.idStatusProductCar = 1;"
     );
 
   //validar que exista productos
@@ -20,7 +20,13 @@ export const createOrder = async (req, res) => {
       data: {},
     });
   }
+  
+  let idTypePayment = req.body.typepayment
+  const typeUser = productsCar.recordset[0].idTypeUser
 
+  if (typeUser === 6){
+    idTypePayment = 2
+  }
   //guarda los productos
   const cartItems = productsCar.recordset;
 
@@ -30,7 +36,7 @@ export const createOrder = async (req, res) => {
     .input("idClient", sql.Int, req.body.client)
     .input("idAddress", sql.Int, req.body.address)
     .input("total", sql.Decimal, req.body.total)
-    .input("idTypePayment", sql.Int, req.body.typepayment)
+    .input("idTypePayment", sql.Int, idTypePayment)
     .input("commentOrder", sql.NVarChar, req.body.comment)
     .input("dateDelivery", sql.NVarChar, req.body.dateDelivery)
     .query(
@@ -75,7 +81,7 @@ export const createOrder = async (req, res) => {
       client: req.body.client,
       address: req.body.address,
       total: req.body.total,
-      typePayment: req.body.typepayment,
+      typePayment: idTypePayment,
       products: cartItems.map((item) => ({
         idProduct: item.idProduct,
         quantity: item.quantity,
