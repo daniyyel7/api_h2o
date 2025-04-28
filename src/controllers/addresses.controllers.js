@@ -15,12 +15,10 @@ export const createAdresses = async (req, res) => {
     .input("latitude", sql.NVarChar, req.body.latitude.toFixed(6))
     .input("longitude", sql.NVarChar, req.body.longitude.toFixed(6))
     .input("descriptionAddress", sql.NVarChar, req.body.description)
-    .input("nombre", sql.NVarChar, req.body.nombre)
-    .input("telefono", sql.NVarChar, req.body.telefono)
+    .input("nombre", sql.NVarChar, req.body.nombre)    .input("telefono", sql.NVarChar, req.body.telefono)
     .input("observaciones", sql.NVarChar, req.body.observaciones)
     .execute(`H2O.STP_CREATE_ADDRESSE`);
   console.log(address.recordset);
-
   return res.status(201).json({
     success: true,
     message: "addresses added successfully.",

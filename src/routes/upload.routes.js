@@ -6,6 +6,7 @@ import {
   uploadImage,
   uploadProduct,
   updateProduct,
+  uploadCarousel,
 } from "../controllers/upload.controllers.js"; // nombre actualizado si cambiaste el archivo
 
 const router = Router();
@@ -22,5 +23,6 @@ router.post("/upload/products", uploadImage, uploadProduct);
 
 router.post("/upload/updateProducts", uploadImage, updateProduct);
 
+router.post("/upload/carousel", uploadImage, uploadCarousel);
 
 export default router;

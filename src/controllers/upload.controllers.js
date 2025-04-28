@@ -47,6 +47,21 @@ export const processImage = async (tempPath, folder, filename) => {
   return `http://h2o.isdapps.uk/public/img/${folder}/${filename}`;
 };
 
+// Función única para procesar y mover imagen
+export const processImageCarousel = async (tempPath, folder, filename) => {
+  const finalPath = `src/public/img/${folder}/${filename}`;
+
+  await sharp(tempPath)
+    .resize(1280, 720, { fit: "inside" })
+    .jpeg({ quality: 60 })
+    .toFile(finalPath);
+
+  fs.unlinkSync(tempPath); // Elimina la imagen temporal
+
+  return `http://h2o.isdapps.uk/public/img/${folder}/${filename}`;
+};
+
+
 //  Subir categoría
 export const uploadCategory = async (req, res) => {
   try {
@@ -398,4 +413,55 @@ export const updateProduct = async (req, res) => {
     console.error("Error al actualizar producto:", error);
     res.status(500).json({ success: false, message: "Error interno al actualizar producto", error: error.message });
   }
+};
+
+
+
+
+export const uploadCarousel = async (req, res) => {
+ 
+  try {
+
+    const folder = "carousel";
+    let urlImg;
+
+    if (req.file) {
+      const filename = req.file.filename;
+      const tempPath = req.file.path;
+      urlImg = await processImageCarousel(tempPath, folder, filename);
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Agregue una imagen",
+        data: {
+        },
+      });
+    }
+
+
+    const pool = await getConnection();
+
+    // Insertar el producto
+    const resultInsert = await pool.request()
+      .input("urlImg", sql.NVarChar, urlImg)
+      .query(`
+       INSERT INTO H2O.CAROUSEL_IMAGES (urlImg, idStatusImg)
+       VALUES (@urlImg,1);
+        SELECT SCOPE_IDENTITY() AS idCarouselImage;
+      `);
+
+    const idImg = resultInsert.recordset[0].idCarouselImage;
+
+    res.status(201).json({
+      success: true,
+      message: "Imagen cargada correctamente",
+      data: {
+        idImg: idImg,
+      },
+    });
+  } catch (error) {
+    console.error("Error al subir imagen:", error);
+    res.status(500).json({ success: false, message: "Error interno al subir imagen", error: error.message });
+  }
+
 };

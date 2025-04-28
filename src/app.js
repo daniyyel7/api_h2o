@@ -10,7 +10,8 @@ import reportRoutes from './routes/reports.routes.js'
 import categoriesRoutes from './routes/categories.routes.js'
 import uploadRoutes from './routes/upload.routes.js'
 import clientRoutes from './routes/clients.routes.js'
-import catalogtRoutes from './routes/catalog.routes.js'
+import catalogRoutes from './routes/catalog.routes.js'
+import carouselRoutes from './routes/carousel.routes.js'
 
 // Swagger documentación
 import swaggerUi from 'swagger-ui-express';
@@ -38,7 +39,8 @@ app.use(reportRoutes);
 app.use(categoriesRoutes);
 app.use(uploadRoutes);
 app.use(clientRoutes);
-app.use(catalogtRoutes);
+app.use(catalogRoutes);
+app.use(carouselRoutes);
 
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
