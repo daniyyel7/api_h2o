@@ -2,6 +2,8 @@ import { getConnection } from "../database/connection.js";
 import sql from "mssql";
 
 export const createAdresses = async (req, res) => {
+  console.log(req.body.latitude);
+
   const pool = await getConnection();
   const address = await pool
     .request()
@@ -10,9 +12,11 @@ export const createAdresses = async (req, res) => {
     .input("outerNumber", sql.NVarChar, req.body.outerNumber)
     .input("insideNumber", sql.NVarChar, req.body.insideNumber)
     .input("idZipCode", sql.Int, req.body.idZipCode)
-    .input("telefono", sql.NVarChar, req.body.telefono)
-    .input("nombre", sql.NVarChar, req.body.nombre)
+    .input("latitude", sql.NVarChar, req.body.latitude.toFixed(6))
+    .input("longitude", sql.NVarChar, req.body.longitude.toFixed(6))
     .input("descriptionAddress", sql.NVarChar, req.body.description)
+    .input("nombre", sql.NVarChar, req.body.nombre)
+    .input("telefono", sql.NVarChar, req.body.telefono)
     .input("observaciones", sql.NVarChar, req.body.observaciones)
     .execute(`H2O.STP_CREATE_ADDRESSE`);
   console.log(address.recordset);
@@ -31,6 +35,8 @@ export const createAdresses = async (req, res) => {
       colonia: address.recordset[0].colonia,
       estado: address.recordset[0].estado,
       zipCode: address.recordset[0].zipCode,
+      latitude: address.recordset[0].latitude,
+      longitude: address.recordset[0].longitude,
       pais: address.recordset[0].pais,
       telefono: address.recordset[0].telefono,
       observaciones: address.recordset[0].observaciones,
@@ -52,6 +58,8 @@ ZC.ciudad,
 ZC.colonia,
 ZC.estado,
 ZC.zipCode,
+CA.latitude,
+CA.longitude,
 ZC.pais,
 CA.telefono,
 CA.observaciones
@@ -107,6 +115,8 @@ export const updateAddress = async (req, res) => {
     .input("outerNumber", sql.NVarChar, req.body.outerNumber)
     .input("insideNumber", sql.NVarChar, req.body.insideNumber)
     .input("idZipCode", sql.Int, req.body.idZipCode)
+    .input("latitude", sql.NVarChar, req.body.latitude.toFixed(6))
+    .input("longitude", sql.NVarChar, req.body.longitude.toFixed(6))
     .input("telefono", sql.NVarChar, req.body.telefono)
     .input("observaciones", sql.NVarChar, req.body.observaciones)
     .query(`UPDATE H2O.CLIENTS_ADREESSES
@@ -117,6 +127,8 @@ street = @street,
 outerNumber = @outerNumber,
 insideNumber = @insideNumber, 
 idZipCode = @idZipCode,
+latitude = @latitude,
+longitude = @longitude,
 telefono = @telefono,
 observaciones = @observaciones
 WHERE idAddress = @idAddress`);
@@ -142,6 +154,8 @@ ZC.ciudad,
 ZC.colonia,
 ZC.estado,
 ZC.zipCode,
+CA.latitude,
+CA.longitude,
 ZC.pais,
 CA.telefono,
 CA.observaciones

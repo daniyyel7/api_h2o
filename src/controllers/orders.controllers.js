@@ -20,12 +20,39 @@ export const createOrder = async (req, res) => {
       data: {},
     });
   }
-  
-  let idTypePayment = req.body.typepayment
-  const typeUser = productsCar.recordset[0].idTypeUser
 
-  if (typeUser === 6){
-    idTypePayment = 2
+  //Busca las ordenes con deuda
+  const debt = await pool
+    .request()
+    .input("idClient", sql.Int, req.body.client) // Fecha como parámetro
+    .execute(`H2O.STP_LIST_ORDERS_DEBT_BY_CLIENT`);
+
+  const orders = debt.recordset;
+
+  // Verificar si se encontraron resultados
+  if (debt.recordset.length !== 0) {
+    // Calcular el total de deuda
+    const totalDebt = orders.reduce(
+      (sum, order) => sum + parseFloat(order.total),
+      0
+    );
+
+    //validar que deuda
+    if ((totalDebt) >= 150) {
+      return res.status(401).json({
+        success: false,
+        message: `Cuenta con un adeudo de ${totalDebt} `,
+        data: {},
+      });
+    }
+
+  }
+
+  let idTypePayment = req.body.typepayment;
+  const typeUser = productsCar.recordset[0].idTypeUser;
+
+  if (typeUser === 6) {
+    idTypePayment = 2;
   }
   //guarda los productos
   const cartItems = productsCar.recordset;
@@ -117,12 +144,22 @@ export const ordersStatus = async (req, res) => {
   try {
     const pool = await getConnection();
 
+    const st = Number(req.body.estatus);
+    let result;
+
+    if (st === 1) {
+      result = await pool
+        .request()
+        .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
+        .execute(`H2O.STP_LIST_ORDERS_BY_STATUS`);
+    } else {
+      result = await pool
+        .request()
+        .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
+        .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
+        .execute(`H2O.STP_LIST_ORDERS_BY_DAY_STATUS`);
+    }
     // Consulta para obtener las órdenes con fecha y estado
-    const result = await pool
-      .request()
-      .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
-      .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
-      .execute(`H2O.STP_LIST_ORDERS_BY_DAY_STATUS`);
 
     // Verificar si se encontraron resultados
     if (result.recordset.length === 0) {
@@ -140,6 +177,7 @@ export const ordersStatus = async (req, res) => {
         // Si la orden ya existe, agregar el producto a los detalles de productos
         existingOrder.productDetails.push({
           nameProduct: order.nameProduct,
+          urlImage: order.urlImage,
           quantity: order.quantity,
           priceProduct: order.priceProduct,
           subtotal: order.subtotal,
@@ -150,11 +188,16 @@ export const ordersStatus = async (req, res) => {
           idOrder: order.idOrder,
           nameComplete: order.nameComplete,
           nameOrderStatus: order.nameOrderStatus,
+          commentOrder: order.commentOrder,
+          comentarioAdministrador: order.commentOrderAdmin,
+          comentarioRepartidor: order.commentOrderDelivery,
           dateOrder: order.dateOrder,
+          estadoPago: order.nameStatusPayment,
           address: order.address,
           productDetails: [
             {
               nameProduct: order.nameProduct,
+              urlImage: order.urlImage,
               quantity: order.quantity,
               priceProduct: order.priceProduct,
               subtotal: order.subtotal,
@@ -246,16 +289,24 @@ export const detailOrder = async (req, res) => {
         O.idOrder,
         CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
         UT.nameType,
-        OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd HH:mm') AS dateOrder,
+        OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd HH:mm') AS dateOrder, P.urlImage,
         CASE 
         WHEN O.dateDelivery IS NULL THEN 'Sin Fecha' 
         ELSE FORMAT(O.dateDelivery, 'yyyy-MM-dd HH:mm') 
     END AS dateDelivery,
         CA.descriptionAddress,
         CASE 
-        WHEN O.commentOrder IS NULL THEN 'Sin Comentario' 
-        ELSE O.commentOrder 
-    END AS commentOrder,
+        WHEN O.commentOrder IS NULL THEN ''
+        ELSE O.commentOrder
+        END AS commentOrder,
+        CASE 
+        WHEN O.commentOrderAdmin IS NULL THEN ''
+        ELSE O.commentOrderAdmin
+        END AS commentOrderAdmin,
+        CASE 
+        WHEN O.commentOrderDelivery IS NULL THEN '' 
+        ELSE O.commentOrderDelivery
+        END AS commentOrderDelivery,
         CONCAT_WS(' ', CA.street, CA.outerNumber, CA.insideNumber, ZC.colonia, ZC.ciudad, ZC.estado, ZC.zipCode) AS address,
         P.nameProduct, OD.quantity, OD.priceProduct, OD.subtotal, O.total, OSP.nameStatusPayment
     FROM H2O.ORDERS O
@@ -287,6 +338,7 @@ export const detailOrder = async (req, res) => {
         idOrder: result.recordset[0].idOrder,
         folio: result.recordset[0].idOrder,
         cliente: result.recordset[0].nameComplete,
+        estadoOrden: result.recordset[0].nameOrderStatus,
         fecha: result.recordset[0].dateOrder,
         fechaEntrega: result.recordset[0].dateDelivery,
         nombreDireccion: result.recordset[0].descriptionAddress,
@@ -294,11 +346,14 @@ export const detailOrder = async (req, res) => {
         total: result.recordset[0].total,
         estadoPago: result.recordset[0].nameStatusPayment,
         comentario: result.recordset[0].commentOrder,
+        comentarioAdministrador: result.recordset[0].commentOrderAdmin,
+        comentarioRepartidor: result.recordset[0].commentOrderDelivery,
         productos: result.recordset.map((row) => ({
           nombre: row.nameProduct,
           cantidad: row.quantity,
           precio: row.priceProduct,
           subtotal: row.subtotal,
+          urlImage: row.urlImage,
         })),
       },
     });
@@ -334,7 +389,7 @@ export const cancelOrder = async (req, res) => {
   return res.status(201).json({
     success: true,
     message: "orden cancelada por el usuario",
-    data:{ }
+    data: {},
   });
 };
 
@@ -344,7 +399,7 @@ export const undeliveredOrder = async (req, res) => {
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
     .input("commentOrder", sql.NVarChar, req.body.commentOrder)
-    .input("statusPago", sql.Int,req.body.statusPago)
+    .input("statusPago", sql.Int, req.body.statusPago)
     .query(
       `UPDATE H2O.ORDERS
       SET idOrderStatus = 7, commentOrderDelivery = @commentOrder, idStatusPayment = @statusPago
@@ -363,17 +418,17 @@ export const undeliveredOrder = async (req, res) => {
   return res.status(201).json({
     success: true,
     message: "orden entregada por la planta",
-    data: result2.recordset
+    data: result2.recordset,
   });
 };
 
-export const deliveryOrder  = async (req, res) => {
+export const deliveryOrder = async (req, res) => {
   const pool = await getConnection();
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
     .input("commentOrder", sql.NVarChar, req.body.commentOrder)
-    .input("statusPago", sql.Int,req.body.statusPago)
+    .input("statusPago", sql.Int, req.body.statusPago)
     .query(
       `UPDATE H2O.ORDERS
       SET idOrderStatus = 4, commentOrderDelivery = @commentOrder, idStatusPayment = @statusPago
@@ -388,11 +443,11 @@ export const deliveryOrder  = async (req, res) => {
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
     .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
-s
+  s;
   return res.status(201).json({
     success: true,
     message: "orden entregada por la planta",
-    data: result2.recordset
+    data: result2.recordset,
   });
 };
 
@@ -419,7 +474,7 @@ export const autoriceOrder = async (req, res) => {
   return res.status(201).json({
     success: true,
     message: "orden autorizada por la planta",
-    data:{ }
+    data: {},
   });
 };
 
@@ -446,10 +501,9 @@ export const rejectedOrder = async (req, res) => {
   return res.status(201).json({
     success: true,
     message: "orden rechazada por la planta purificadora",
-    data:{ }
+    data: {},
   });
 };
-
 
 export const listOrdersByClient = async (req, res) => {
   try {
@@ -491,6 +545,52 @@ WHERE O.idClient = @idClient`);
       success: true,
       message: "Lista de ordenes",
       data: result.recordset,
+    });
+  } catch (error) {
+    // Manejo de errores
+    console.error("Error fetching order status:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+export const listOrdersDebtByClient = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    // Consulta para obtener las órdenes con fecha y estado
+    const result = await pool
+      .request()
+      .input("idClient", sql.Int, req.params.idClient) // Fecha como parámetro
+      .execute(`H2O.STP_LIST_ORDERS_DEBT_BY_CLIENT`);
+
+    const orders = result.recordset;
+
+    // Verificar si se encontraron resultados
+    if (result.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found for the given date and status",
+        data: {},
+      });
+    }
+
+    // Calcular el total de deuda
+    const totalDebt = orders.reduce(
+      (sum, order) => sum + parseFloat(order.total),
+      0
+    );
+
+    // Devolver el JSON con el número total de órdenes y las órdenes
+    return res.status(200).json({
+      success: true,
+      message: "Lista de ordenes",
+      data: {
+        totalDebt: totalDebt,
+        listOrders: result.recordset,
+      },
     });
   } catch (error) {
     // Manejo de errores

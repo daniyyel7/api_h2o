@@ -7,7 +7,11 @@ import {
     deleteType,
     createUserStatus,
     createUser,
-    updateUser
+    updateUser,
+    createDelivery,
+    getDelivery,
+    updateDelivery,
+    deleteUser,
 } from '../controllers/users.controllers.js'
 
 const router = Router();
@@ -26,8 +30,15 @@ router.post('/users/status', createUserStatus)
 //Crear un usuario
 router.post('/users/create', createUser)
 
+
 //Actualizacion de usuario
 router.put('/users/update/:id', updateUser)
 
+//Create delivery
+router.post('/users/createDelivery', createDelivery)
+router.post('/users/updateDelivery', updateDelivery)
+router.get('/users/deliverys', getDelivery)
+
+router.delete('/users/delete/:idUser', deleteUser)
 
 export default router;

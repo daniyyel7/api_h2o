@@ -2,15 +2,15 @@ import { getConnection } from "../database/connection.js";
 import sql from "mssql";
 
 export const getDashboard = async (req, res) => {
-  const st = 2;
+  const st = 4;
 
   const pool = await getConnection();
   const sales = await pool
     .request()
     .input("fecha", sql.NVarChar, req.params.date)
     .input("status", sql.Int, st)
-    .execute(`H2O.STP_LIST_ORDERS_BY_DAY_STATUS`);
-  console.log(sales.recordset);
+    .execute(`H2O.STP_DASHBOARD`);
+  console.log(sales);
 
   // Inicializamos variables para total Ventas, tipos de productos y tipos de clientes
   let totalVentas = 0;
@@ -27,6 +27,8 @@ export const getDashboard = async (req, res) => {
     "cliente departamento": 0,
     "sin ventas": 1,
   };
+
+  const pedidosContados = new Set();
 
   // Verifica si 'sales.recordset' tiene datos
   if (sales.recordset.length === 0) {
@@ -58,8 +60,12 @@ export const getDashboard = async (req, res) => {
     }
 
     // Contamos el número de pedidos por tipo de cliente
-    if (pedidosCliente[order.nameType] !== undefined) {
-      pedidosCliente[order.nameType] += 1;
+    if (!pedidosContados.has(order.idOrder)) {
+      pedidosContados.add(order.idOrder);
+
+      if (pedidosCliente[order.nameType] !== undefined) {
+        pedidosCliente[order.nameType] += 1;
+      }
     }
   });
 

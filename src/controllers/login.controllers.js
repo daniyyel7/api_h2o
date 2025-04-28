@@ -30,13 +30,31 @@ export const clientLogin = async (req, res) => {
       });
     } else {
       const result2 = await pool.query(
-        `SELECT * FROM H2O.CLIENTS_DATA WHERE idUser = ${result.recordset[0].idUser}`
+        `SELECT CA.idClient,CA.idUser, CA.nameClient, CA.firtsLastNameClient, CA.secondLastNameClient, CA.telephoneClient, CA.dateBirth, CA.urlPhotoClient, CA.idSex, CA.emailClient, U.idTypeUser
+FROM H2O.CLIENTS_DATA CA
+INNER JOIN H2O.USERS U ON CA.idUser = U.idUser
+WHERE CA.idUser = ${result.recordset[0].idUser}`
       );
+      const tokeJW = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lVXNlciI6ImRhbmllbDEwaGFzQHVsdi5lZHUubXgiLCJpYXQiOjE3NDI0MDI2NzIsImV4cCI6MTc0MzAwNzQ3Mn0.tbrJebP1ntq5x1wdVZjVB4Xl6vFzehmiP-VsqAslkes";
 
       return res.status(200).json({
         message: "acceso correcto",
         success: true,
-        data: result2.recordset[0],
+        data: {
+          idClient: result2.recordset[0].idClient,
+          idUser: result2.recordset[0].idUser,
+          nameClient: result2.recordset[0].nameClient,
+          firtsLastNameClient: result2.recordset[0].firtsLastNameClient,
+          secondLastNameClient: result2.recordset[0].secondLastNameClient,
+          telephoneClient: result2.recordset[0].telephoneClient,
+          urlPhotoClient: result2.recordset[0].urlPhotoClient,
+          dateBirth: result2.recordset[0].dateBirth,
+          idSex: result2.recordset[0].idSex,
+          emailClient: result2.recordset[0].emailClient,
+          idTypeUser: result2.recordset[0].idTypeUser,
+          tokeFB: req.body.tokenFB,
+          tokeJW: tokeJW,
+        },
       });
     }
   }
@@ -47,16 +65,21 @@ export const staffLogin = async (req, res) => {
   const pool = await getConnection();
   const result = await pool
     .request()
-    .input("user", sql.VarChar, req.body.user)
-    .input("key", sql.VarChar, req.body.password)
+    .input("user", sql.NVarChar, req.body.user)
+    .input("key", sql.NVarChar, req.body.password)
     .query(
       "SELECT * FROM H2O.USERS WHERE nameUser = @user ; SELECT SCOPE_IDENTITY() AS idUser;"
     );
+
+  // Busca el usuario
   if (result.rowsAffected[0] === 0) {
     return res
       .status(200)
       .json({ message: "user not found", access: false, data: {} });
-  } else {
+  }
+  // Si lo encuentra
+  else {
+    //valida si las contraseñas coinciden
     const password = result.recordset[0].passwordUser;
     const user = result.recordset[0].nameUser;
     console.log(password);
@@ -68,17 +91,48 @@ export const staffLogin = async (req, res) => {
         success: false,
         data: {},
       });
-    } else {
+    }
+    // Si tiene acceso el usario
+    else {
+      //Validar el token de FireBase
+      const valToken = await pool
+        .request()
+        .input("tokenFB", sql.NVarChar, req.body.tokenFB)
+        .query(
+          "SELECT * FROM H2O.USER_FIREBASE_NOTIFICATION WHERE tokenFirebase = @tokenFB"
+        );
+
+      const tokeJW = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lVXNlciI6ImRhbmllbDEwaGFzQHVsdi5lZHUubXgiLCJpYXQiOjE3NDI0MDI2NzIsImV4cCI6MTc0MzAwNzQ3Mn0.tbrJebP1ntq5x1wdVZjVB4Xl6vFzehmiP-VsqAslkes";
+
+      let valToken2;
+
+      if (valToken.rowsAffected[0] === 0) {
+        valToken2 = await pool
+        .request()
+          .input("tokenFB", sql.NVarChar, req.body.tokenFB)
+          .input("idUser", sql.Int, result.recordset[0].idUser)
+          .query(
+            `INSERT INTO H2O.USER_FIREBASE_NOTIFICATION (idUser,tokenFirebase)VALUES(@idUser,@tokenFB)`
+          );
+
+      }
+
       const result2 =
         await pool.query(`SELECT SC.idStaff, SC.idUser, U.idTypeUser 
-FROM H2O.STAFF_COMPANY AS SC
-INNER JOIN  H2O.USERS U ON U.idUser = SC.idUser
-WHERE SC.idUser = ${result.recordset[0].idUser}`);
+                          FROM H2O.STAFF_COMPANY AS SC
+                          INNER JOIN  H2O.USERS U ON U.idUser = SC.idUser
+                          WHERE SC.idUser = ${result.recordset[0].idUser}`);
 
       return res.status(200).json({
         message: "acceso correcto",
         success: true,
-        data: result2.recordset[0],
+        data: {
+          idStaff: result2.recordset[0].idStaff,
+          idUser: result2.recordset[0].idUser,
+          idTypeUser: result2.recordset[0].idTypeUser,
+          tokeFB: req.body.tokenFB,
+          tokeJW: tokeJW,
+        },
       });
     }
   }
@@ -106,7 +160,9 @@ export const registerClient = async (req, res) => {
       .input("password", sql.VarChar, req.body.password)
       .input("type", sql.Int, typeClient)
       .query(
-        "INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@nameUser, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;"
+        `INSERT INTO H2O.USERS 
+        (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) 
+        VALUES (@nameUser, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;`
       );
 
     const idUser = result.recordset[0].idUser;
@@ -123,9 +179,11 @@ export const registerClient = async (req, res) => {
       .input("apellidoMaterno", sql.VarChar, req.body.apellidoMaterno)
       .input("telefono", sql.VarChar, req.body.telefono)
       .input("fechaNacimiento", sql.Date, req.body.fechaNacimiento)
-      .input("sexo", sql.Char, req.body.sexo)
+      .input("sexo", sql.Int, req.body.sexo)
       .query(
-        "INSERT INTO H2O.CLIENTS_DATA (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, sexo) VALUES ( @idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, 'https://h2o.isdapps.uk/public/image_profile.png' , @fechaNacimiento, @sexo); SELECT SCOPE_IDENTITY() AS idClient;"
+        `INSERT INTO H2O.CLIENTS_DATA 
+        (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, idSex) 
+        VALUES ( @idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, 'https://h2o.isdapps.uk/public/image_profile.png' , @fechaNacimiento, @sexo); SELECT SCOPE_IDENTITY() AS idClient;`
       );
 
     return res.status(200).json({

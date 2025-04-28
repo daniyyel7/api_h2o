@@ -1,156 +1,157 @@
-import {getConnection} from '../database/connection.js';
-import sql from 'mssql'
+import { getConnection } from "../database/connection.js";
+import sql from "mssql";
 
-export const getTypeUsers = async (req,res) => {
-    const pool = await getConnection()
-    const result = await pool.request().query("SELECT * FROM H2O.USERS_TYPE")
-    return res.status(200).json({
-        succes : true,
-        message: "tipos de usuarios",
-        data: result.recordset,
-    })
+export const getTypeUsers = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool.request().query("SELECT * FROM H2O.USERS_TYPE");
+  return res.status(200).json({
+    succes: true,
+    message: "tipos de usuarios",
+    data: result.recordset,
+  });
 };
 
 export const getTypeUser = async (req, res) => {
-    const pool = await getConnection()
-    const result = await pool
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("id", sql.Int, req.params.id)
-    .query("SELECT * FROM H2O.USERS_TYPE WHERE idTypeUser = @id")
-    if (result.rowsAffected[0] === 0) {
-        return res.status(404).json({ message :"type not found" });
-    }
-    return res.status(200).json({
-        success: true,
-        message: 'Tipo de usaurio',
-        data: result.recordset[0]});
+    .query("SELECT * FROM H2O.USERS_TYPE WHERE idTypeUser = @id");
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "type not found" });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Tipo de usaurio",
+    data: result.recordset[0],
+  });
 };
 
-export const createTypeUser = async( req, res) => {
-    const pool = await getConnection();
-    const result = await pool
+export const createTypeUser = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("name", sql.VarChar, req.body.name)
-    .query('INSERT INTO H2O.USERS_TYPE (nameType) VALUES (@name); SELECT SCOPE_IDENTITY() AS idTypeUser;');
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "error could not create type"});
-    }
-    res.status(200).json({
-        success: true,
-        message : "type of user create",
-        data: {
-            id : result.recordset[0].idTypeUser,
-            name : req.body.name,
-        }
-    });
+    .query(
+      "INSERT INTO H2O.USERS_TYPE (nameType) VALUES (@name); SELECT SCOPE_IDENTITY() AS idTypeUser;"
+    );
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "error could not create type" });
+  }
+  res.status(200).json({
+    success: true,
+    message: "type of user create",
+    data: {
+      id: result.recordset[0].idTypeUser,
+      name: req.body.name,
+    },
+  });
 };
 
-export const updateType = async ( req, res) => {
-    const pool = await getConnection()
-    const result = await pool
+export const updateType = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("id", sql.Int, req.params.id)
     .input("name", sql.VarChar, req.body.name)
     .query("UPDATE H2O.USERS_TYPE SET nameType = @name WHERE idTypeUser = @id");
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ message : "type not found not updated"});
-    }
-    return res.status(201).json({ 
-        success: true,
-        message : "type updated",
-        data:{
-            id : req.params.id, 
-            name : req.body.name, 
-        }
-    });
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "type not found not updated" });
+  }
+  return res.status(201).json({
+    success: true,
+    message: "type updated",
+    data: {
+      id: req.params.id,
+      name: req.body.name,
+    },
+  });
 };
 
-export const deleteType =  async( req, res) => {
-    const pool = await getConnection()
-    const result = await pool
+export const deleteType = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("id", sql.Int, req.params.idType)
     .query("DELETE FROM H2O.USERS_TYPE WHERE idTypeUser = @id");
-    if( result.rowsAffected[0] === 0 ) {
-        return res.status(404).json({ message : "User not foun not deleted"})
-    }
-    return res.status(200).json({ 
-        success: true,
-        message : "user deleted",
-        data:""
-    })
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "User not foun not deleted" });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "user deleted",
+    data: "",
+  });
 };
 
 //Crear un status para usuario
-export const createUserStatus = async (req,res) => {
-    const pool = await getConnection();
-    const result = await pool
+export const createUserStatus = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("name", sql.VarChar, req.body.name)
-    .query('INSERT INTO H2O.USERS_STATUS (nameStatus) VALUES (@name); SELECT SCOPE_IDENTITY() AS idStatusUser;');
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ 
-            success: false,
-            message : "error could not create user",
-            data: {},
-        });
-    }
-    res.status(200).json({
-        success: true,
-        message : "status of user create",
-        data: {
-            id : result.recordset[0].idStatusUser,
-            ame : req.body.name
-        },
+    .query(
+      "INSERT INTO H2O.USERS_STATUS (nameStatus) VALUES (@name); SELECT SCOPE_IDENTITY() AS idStatusUser;"
+    );
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "error could not create user",
+      data: {},
     });
+  }
+  res.status(200).json({
+    success: true,
+    message: "status of user create",
+    data: {
+      id: result.recordset[0].idStatusUser,
+      name: req.body.name,
+    },
+  });
 };
 
 //Crear un usuario
-export const createUser = async (req,res) => {
-    const pool = await getConnection();
+export const createUser = async (req, res) => {
+  const pool = await getConnection();
 
-    
-
-    const existe = await pool
+  const existe = await pool
     .request()
     .input("nameUser", sql.VarChar, req.body.nameUser)
     .query("SELECT idUser FROM H2O.USERS WHERE nameUser = @nameUser");
 
-    if (existe.rowsAffected[0] != 0) {
-        return res.status(404).json({ 
-            success: false,
-            message : "error user exist",
-            data: {},
-        });
-    }
+  if (existe.rowsAffected[0] != 0) {
+    return res.status(404).json({
+      success: false,
+      message: "error user exist",
+      data: {},
+    });
+  }
 
-
-
-
-
-    const result = await pool
+  const result = await pool
     .request()
     .input("name", sql.VarChar, req.body.name)
     .input("password", sql.VarChar, req.body.password)
     .input("type", sql.Int, req.body.type)
-    .query('INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@name, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;');
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ 
-            success: false,
-            message : "error could not create user",
-            data: {},
-        });
-    }
-    res.status(200).json({
-        success: true,
-        message : "user create",
-        data: {
-            id : result.recordset[0].idUser,
-            name : req.body.name,
-            password : req.body.password,
-            type : req.body.type,
-        }
+    .query(
+      "INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation ) VALUES (@name, @password, @type, 1, GETDATE()); SELECT SCOPE_IDENTITY() AS idUser;"
+    );
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "error could not create user",
+      data: {},
     });
+  }
+  res.status(200).json({
+    success: true,
+    message: "user create",
+    data: {
+      id: result.recordset[0].idUser,
+      name: req.body.name,
+      password: req.body.password,
+      type: req.body.type,
+    },
+  });
 };
 
 //Crea un registo de cliente, publico general o insitucional
@@ -221,43 +222,128 @@ export const registerClient = async (req, res) => {
   }
 };
 
-
-
-
-
 //Actualizar estatus de un usuario
-export const updateUser = async (req,res) => {
-    const pool = await getConnection()
-    const result = await pool
+export const updateUser = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
     .request()
     .input("id", sql.Int, req.params.id)
-    .input("name", sql.VarChar, req.body.name)
     .input("password", sql.VarChar, req.body.password)
     .input("type", sql.Int, req.body.type)
     .input("status", sql.Int, req.body.status)
-    .query("UPDATE H2O.USERS SET nameUser = @name, passwordUser = @password, idTypeUser = @type, idStatusUser = @status WHERE idUser = @id");
-    if( result.rowsAffected[0] === 0){
-        return res.status(404).json({ 
-            success: false,
-            message : "user not found not updated",
-            data: {},
-        });
-    }
-    return res.status(201).json({ 
-        success: true,
-        message : "user updated",
-        data:{
-            id : req.params.id, 
-            name : req.body.name,
-            password : req.body.password,
-            type : req.body.type,
-            status : req.body.status,
-        },
+    .query(
+      "UPDATE H2O.USERS SET nameUser = @name, passwordUser = @password, idTypeUser = @type, idStatusUser = @status WHERE idUser = @id"
+    );
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "user not found not updated",
+      data: {},
     });
+  }
+  return res.status(201).json({
+    success: true,
+    message: "user updated",
+    data: {
+      id: req.params.id,
+      name: req.body.name,
+      password: req.body.password,
+      type: req.body.type,
+      status: req.body.status,
+    },
+  });
+};
+
+export const createDelivery = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("nameUser", sql.NVarChar, req.body.nameUser)
+    .input("passwordUser", sql.NVarChar, req.body.password)
+    .input("nameStaff", sql.NVarChar, req.body.name)
+    .input("firtsLastNameStaff", sql.NVarChar, req.body.lastName)
+    .input("secondLastNameStaff", sql.NVarChar, req.body.secondLastName)
+    .input("telephoneStaff", sql.NVarChar, req.body.telephone)
+    .input("emailStaff", sql.NVarChar, req.body.email)
+    .input("idSex", sql.Int, req.body.idSex)
+    .execute(`H2O.STP_CREATE_DELIVERY`);
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "delivery not create",
+      data: {},
+    });
+  }
+  return res.status(201).json({
+    success: true,
+    message: "delivery create",
+    data: {},
+  });
+};
+
+export const getDelivery = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool.request().input("id", sql.Int, req.params.id)
+    .query(` SELECT
+    U.idUser, SC.idStaff, 
+    CONCAT_WS(' ',SC.nameStaff,SC.firtsLastNameStaff, SC.secondLastNameStaff) AS nameCompleteClient, CS.descriptionSex, SC.emailStaff,
+    U.nameUser, U.passwordUser, UT.nameType, US.nameStatus, U.dateCreation, SC.telephoneStaff, SC.urlPhotoStaff, SC.nameStaff, SC.firtsLastNameStaff, SC.secondLastNameStaff, CS.initalSex
+    FROM H2O.USERS AS U
+    INNER JOIN H2O.STAFF_COMPANY AS SC ON U.idUser = SC.idUser 
+    INNER JOIN H2O.USERS_TYPE AS UT ON U.idTypeUser = UT.idTypeUser
+    INNER JOIN H2O.USERS_STATUS AS US ON U.idStatusUser = US.idStatusUser
+    INNER JOIN H2O.CAT_SEX AS CS ON SC.idSex = CS.idSex
+    WHERE U.idTypeUser = 2 AND U.idStatusUser = 1`);
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "type not found" });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "todos los repartidores",
+    data: result.recordset,
+  });
+};
+
+export const updateDelivery = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .input("passwordUser", sql.NVarChar, req.body.password)
+    .input("nameStaff", sql.NVarChar, req.body.name)
+    .input("firtsLastNameStaff", sql.NVarChar, req.body.lastName)
+    .input("secondLastNameStaff", sql.NVarChar, req.body.secondLastName)
+    .input("telephoneStaff", sql.NVarChar, req.body.telephone)
+    .input("emailStaff", sql.NVarChar, req.body.email)
+    .input("idSex", sql.Int, req.body.idSex)
+    .execute(`H2O.STP_UPDATE_DELIVERY`);
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "delivery not update",
+      data: {},
+    });
+  }
+  return res.status(201).json({
+    success: true,
+    message: "delivery updated",
+    data: result.recordset,
+  });
 };
 
 
-
-
-
-
+export const deleteUser = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool
+    .request()
+    .input("idUser", sql.Int, req.params.idUser)
+    .execute("H2O.STP_DELETE_USER");
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({ message: "User not foun not deleted" });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "user deleted",
+    data: result.recordset,
+  });
+};

@@ -7,12 +7,19 @@ import loginRoutes from './routes/login.routes.js';
 import ordersRoutes from './routes/orders.routes.js'
 import addressesRoutes from './routes/addresses.routes.js'
 import reportRoutes from './routes/reports.routes.js'
+import categoriesRoutes from './routes/categories.routes.js'
+import uploadRoutes from './routes/upload.routes.js'
+import clientRoutes from './routes/clients.routes.js'
+import catalogtRoutes from './routes/catalog.routes.js'
 
 // Swagger documentación
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+
+
 
 const app = express();
 
@@ -28,6 +35,10 @@ app.use(loginRoutes);
 app.use(ordersRoutes);
 app.use(addressesRoutes);
 app.use(reportRoutes);
+app.use(categoriesRoutes);
+app.use(uploadRoutes);
+app.use(clientRoutes);
+app.use(catalogtRoutes);
 
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);
