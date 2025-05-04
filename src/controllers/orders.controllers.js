@@ -38,22 +38,24 @@ export const createOrder = async (req, res) => {
     );
 
     //validar que deuda
-    if ((totalDebt) >= 150) {
+    if (totalDebt >= 150) {
       return res.status(401).json({
         success: false,
         message: `Cuenta con un adeudo de ${totalDebt} `,
         data: {},
       });
     }
-
   }
 
-  let idTypePayment = req.body.typepayment;
+  //Con el tipo de cliente buscamos el tipo de pago permitido si es efectivo o cargo
   const typeUser = productsCar.recordset[0].idTypeUser;
+  const getTypePay = await pool
+    .request()
+    .input("idTypeUser", sql.Int, typeUser) // Fecha como parámetro
+    .query(`SELECT * FROM H2O.USERS_TYPE WHERE idTypeUser = @idTypeUser`);
 
-  if (typeUser === 6) {
-    idTypePayment = 2;
-  }
+  let idTypePayment = getTypePay.recordset[0].idTypePayment;
+
   //guarda los productos
   const cartItems = productsCar.recordset;
 
@@ -67,7 +69,7 @@ export const createOrder = async (req, res) => {
     .input("commentOrder", sql.NVarChar, req.body.comment)
     .input("dateDelivery", sql.NVarChar, req.body.dateDelivery)
     .query(
-      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment, commentOrder, dateDelivery, idStatusPayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment, @commentOrder, @dateDelivery, 1); SELECT SCOPE_IDENTITY() AS idOrder;"
+      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment, commentOrder, dateDelivery, idStatusPayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment, @commentOrder, @dateDelivery, 1); SELECT SCOPE_IDENTITY() AS idOrder;   "
     );
 
   //Validar la orden se insertara correctamente
@@ -75,8 +77,48 @@ export const createOrder = async (req, res) => {
     return res.status(404).json({ message: "error could not add order" });
   }
 
-  //se guarda el id de la orden
+  //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
   const idOrder = insertOrder.recordset[0].idOrder;
+  const idOrderStatus = 1;
+  const idStaff = 0;
+
+  const updateHistroyOrder = await pool
+    .request()
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
+
+  // Actualizar pago
+  const idStatusPayment = 0;
+  const updateHistroyPayment = await pool
+    .request()
+    .input("idOrder", sql.Int, idOrder)
+    .input("idStatusPayment", sql.Int, idStatusPayment)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO H2O.ORDERS_PAYMENT_HISTORY (idOrder, idStatusPayment, dateStatusPayment, idStaff)
+      VALUES(@idOrder, @idStatusPayment, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyPayment.rowsAffected[0] === 0) {
+    console.log("error de history payment");
+  }
 
   //Se inserta una fila por producto en detalle de la orden
   for (const item of cartItems) {
@@ -369,6 +411,7 @@ export const detailOrder = async (req, res) => {
 
 export const cancelOrder = async (req, res) => {
   const pool = await getConnection();
+
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
@@ -382,10 +425,33 @@ export const cancelOrder = async (req, res) => {
     return res.status(404).json({ message: "order not found not canceled" });
   }
 
-  const result2 = await pool
+  //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
+  const idOrder = req.body.idOrder;
+  const idOrderStatus = 6;
+  const idStaff = 0;
+
+  const updateHistroyOrder = await pool
     .request()
-    .input("idOrder", sql.Int, req.params.idOrder)
-    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
+
   return res.status(201).json({
     success: true,
     message: "orden cancelada por el usuario",
@@ -395,6 +461,13 @@ export const cancelOrder = async (req, res) => {
 
 export const undeliveredOrder = async (req, res) => {
   const pool = await getConnection();
+
+  //Obtener idStaff
+  const staff = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser`);
+
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
@@ -408,6 +481,48 @@ export const undeliveredOrder = async (req, res) => {
 
   if (result.rowsAffected[0] === 0) {
     return res.status(404).json({ message: "order not found not delivery" });
+  }
+
+  //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
+  const idOrder = req.body.idOrder;
+  const idOrderStatus = 7;
+  const idStaff = staff.recordset[0].idStaff;
+
+  const updateHistroyOrder = await pool
+    .request()
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
+
+  // Actualizar pago
+  const idStatusPayment = req.body.statusPago;
+
+  if (idStatusPayment === 1) {
+    const updateHistroyPayment = await pool
+      .request()
+      .input("idOrder", sql.Int, idOrder)
+      .input("idStatusPayment", sql.Int, idStatusPayment)
+      .input("idStaff", sql.Int, idStaff)
+      .query(
+        `INSERT INTO H2O.ORDERS_PAYMENT_HISTORY (idOrder, idStatusPayment, dateStatusPayment, idStaff)
+          VALUES(@idOrder, @idStatusPayment, GETDATE(), @idStaff)`
+      );
   }
 
   const result2 = await pool
@@ -424,6 +539,13 @@ export const undeliveredOrder = async (req, res) => {
 
 export const deliveryOrder = async (req, res) => {
   const pool = await getConnection();
+
+  //Obtener idStaff
+  const staff = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser`);
+
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
@@ -439,11 +561,53 @@ export const deliveryOrder = async (req, res) => {
     return res.status(404).json({ message: "order not found not delivery" });
   }
 
+  //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
+  const idOrder = req.body.idOrder;
+  const idOrderStatus = 4;
+  const idStaff = staff.recordset[0].idStaff;
+
+  const updateHistroyOrder = await pool
+    .request()
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
+
+  // Actualizar pago
+  const idStatusPayment = req.body.statusPago;
+
+  if (idStatusPayment === 1) {
+    const updateHistroyPayment = await pool
+      .request()
+      .input("idOrder", sql.Int, idOrder)
+      .input("idStatusPayment", sql.Int, idStatusPayment)
+      .input("idStaff", sql.Int, idStaff)
+      .query(
+        `INSERT INTO H2O.ORDERS_PAYMENT_HISTORY (idOrder, idStatusPayment, dateStatusPayment, idStaff)
+          VALUES(@idOrder, @idStatusPayment, GETDATE(), @idStaff)`
+      );
+  }
+
   const result2 = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
     .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
-  s;
+
   return res.status(201).json({
     success: true,
     message: "orden entregada por la planta",
@@ -451,25 +615,89 @@ export const deliveryOrder = async (req, res) => {
   });
 };
 
-export const autoriceOrder = async (req, res) => {
+export const updateStatusPayment = async (req, res) => {
   const pool = await getConnection();
+
+  const existStaff = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .query(" SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser");
+  const idStaff = existStaff.recordset[0].idStaff;
+
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
+    .input("idStatusPayment", sql.Int, req.body.idStatus)
+    .input("idStaff", sql.Int, idStaff).query(`
+      INSERT INTO H2O.ORDERS_PAYMENT_HISTORY (idOrder, idStatusPayment, dateStatusPayment, idStaff)
+      VALUES(@idOrder, @idStatusPayment, GETDATE(), @idStaff); 
+      UPDATE H2O.ORDERS SET idStatusPayment = @idStatusPayment WHERE idOrder = @idOrder 
+      `);
+
+  if (result.rowsAffected[0] === 0) {
+    return res.status(404).json({
+      success: false,
+      message: "no fue posible actulizar el status de pago",
+      data: {},
+    });
+  }
+
+  return res.status(201).json({
+    success: true,
+    message: "estatus actualizado",
+    data: {},
+  });
+};
+
+export const autoriceOrder = async (req, res) => {
+  const pool = await getConnection();
+
+  //Obtener idStaff
+  const staff = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser`);
+
+  const result = await pool
+    .request()
+    .input("idOrder", sql.Int, req.body.idOrder)
+    .input("commentOrder", sql.NVarChar, req.body.commentOrder)
     .query(
       `UPDATE H2O.ORDERS
-      SET idOrderStatus = 2
+      SET idOrderStatus = 2, commentOrderAdmin = @commentOrder
       WHERE idOrder = @idOrder`
     );
 
   if (result.rowsAffected[0] === 0) {
-    return res.status(404).json({ message: "order not found not canceled" });
+    return res.status(404).json({ message: "order not found no actualizada" });
   }
 
-  const result2 = await pool
+  //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
+  const idOrder = req.body.idOrder;
+  const idOrderStatus = 2;
+  const idStaff = staff.recordset[0].idStaff;
+
+  const updateHistroyOrder = await pool
     .request()
-    .input("idOrder", sql.Int, req.params.idOrder)
-    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
 
   return res.status(201).json({
     success: true,
@@ -480,6 +708,15 @@ export const autoriceOrder = async (req, res) => {
 
 export const rejectedOrder = async (req, res) => {
   const pool = await getConnection();
+
+
+  //Obtener idStaff
+  const staff = await pool
+    .request()
+    .input("idUser", sql.Int, req.body.idUser)
+    .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser`);
+
+
   const result = await pool
     .request()
     .input("idOrder", sql.Int, req.body.idOrder)
@@ -494,10 +731,33 @@ export const rejectedOrder = async (req, res) => {
     return res.status(404).json({ message: "order not found not canceled" });
   }
 
-  const result2 = await pool
+   //Insertar el registro en el historial
+  //  De aacuerdo al catalogo
+  // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
+  // 2	aceptada	Orden aceptada por la planta purificadora
+  // 3	en camino	Orden esta en camino para su entrega
+  // 4	entregado	Orden entregada en la dirección indica
+  // 5	cancelada	Orden rechazada por el personal de la planta purificadora
+  // 6	cancelada por cliente	El cliente canceló la orden
+  // 7	no entregada	Orden que el repartidor marco que no entrego por algun motivo
+  const idOrder = req.body.idOrder;
+  const idOrderStatus = 5;
+  const idStaff = staff.recordset[0].idStaff;
+
+  const updateHistroyOrder = await pool
     .request()
-    .input("idOrder", sql.Int, req.params.idOrder)
-    .query(`SELECT * FROM H2O.ORDERS WHERE idOrder = @idOrder`);
+    .input("idOrder", sql.Int, idOrder)
+    .input("idOrderStatus", sql.Int, idOrderStatus)
+    .input("idStaff", sql.Int, idStaff)
+    .query(
+      `INSERT INTO  H2O.ORDERS_STATUS_HISTORY (idOrder, idOrderStatus, dateOrderStatusHistory, idStaff)
+     VALUES (@idOrder, @idOrderStatus, GETDATE(), @idStaff)`
+    );
+
+  if (updateHistroyOrder.rowsAffected[0] === 0) {
+    console.log("error de history");
+  }
+
   return res.status(201).json({
     success: true,
     message: "orden rechazada por la planta purificadora",
