@@ -33,18 +33,24 @@ export const uploadImage = multer({
   },
 }).single("myFile");
 
-// Función única para procesar y mover imagen
-export const processImage = async (tempPath, folder, filename) => {
-  const finalPath = `src/public/img/${folder}/${filename}`;
+
+export const processImage = async (tempPath, folder, originalFilename) => {
+  const baseName = path.parse(originalFilename).name; // Sin extensión
+  const finalFileName = `${baseName}.png`; // Asegura extensión .png
+  const finalPath = `src/public/img/${folder}/${finalFileName}`;
 
   await sharp(tempPath)
-    .resize(350, 350, { fit: "inside" })
-    .jpeg({ quality: 60 })
+    .rotate() // Corrige orientación automática
+    .resize(95, 150, { fit: "inside" })
+    .png({ quality: 80 }) // Forzar PNG con compresión decente
     .toFile(finalPath);
 
-  fs.unlinkSync(tempPath); // Elimina la imagen temporal
+  fs.unlinkSync(tempPath); // Borra imagen temporal
 
-  return `http://h2o.isdapps.uk/public/img/${folder}/${filename}`;
+  return {
+    fileName: finalFileName,
+    url: `http://h2o.isdapps.uk/public/img/${folder}/${finalFileName}`,
+  };
 };
 
 // Función única para procesar y mover imagen
@@ -61,8 +67,7 @@ export const processImageCarousel = async (tempPath, folder, filename) => {
   return `http://h2o.isdapps.uk/public/img/${folder}/${filename}`;
 };
 
-
-//  Subir categoría
+// Subir categoría
 export const uploadCategory = async (req, res) => {
   try {
     const { name } = req.body;
@@ -75,12 +80,18 @@ export const uploadCategory = async (req, res) => {
     }
 
     const folder = "categories";
-    const imageName = req.file?.filename?.replaceAll(" ", "_");
+  
 
-    // Si no hay imagen, usar imagen por defecto
-    const urlImg = imageName
-      ? `http://h2o.isdapps.uk/public/img/${folder}/${imageName}`
-      : `http://h2o.isdapps.uk/public/img/${folder}/default.png`; // ⚠️ Asegúrate de tener esta imagen
+    let urlImg;
+
+    if (req.file) {
+      const filename = req.file.filename;
+      const tempPath = req.file.path;
+      urlImg = await processImage(tempPath, folder, filename);
+    } else {
+      // Si no hay archivo, usamos una imagen por defecto
+      urlImg = `http://h2o.isdapps.uk/public/img/${folder}/default.jpg`;
+    }
 
     const pool = await getConnection();
     const result = await pool
@@ -111,6 +122,7 @@ export const uploadCategory = async (req, res) => {
     });
   }
 };
+
 
 // Subir avatar
 export const uploadAvatar = async (req, res) => {

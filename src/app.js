@@ -12,15 +12,13 @@ import uploadRoutes from './routes/upload.routes.js'
 import clientRoutes from './routes/clients.routes.js'
 import catalogRoutes from './routes/catalog.routes.js'
 import carouselRoutes from './routes/carousel.routes.js'
+import suggestionRoutes from './routes/suggestion.routes.js'
 
 // Swagger documentación
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-
-
 
 const app = express();
 
@@ -41,6 +39,7 @@ app.use(uploadRoutes);
 app.use(clientRoutes);
 app.use(catalogRoutes);
 app.use(carouselRoutes);
+app.use(suggestionRoutes);
 
 // Obtener la ruta absoluta del archivo `swagger.json`
 const __filename = fileURLToPath(import.meta.url);

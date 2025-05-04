@@ -167,6 +167,7 @@ export const getProductsWithPrices = async (req, res) => {
       SELECT 
         P.idProduct,
         P.nameProduct,
+        P.idCategorie,
         P.descriptionProduct,
         P.urlImage,
         P.idStatusProduct,
@@ -178,7 +179,7 @@ export const getProductsWithPrices = async (req, res) => {
       CROSS JOIN H2O.USERS_TYPE UT
       LEFT JOIN H2O.PRODUCTS_PRICE PP
         ON P.idProduct = PP.idProduct AND UT.idTypeUser = PP.idTypeUser
-      WHERE P.idStatusProduct = 1
+      WHERE P.idStatusProduct = 1 AND UT.typeUser  IN ('PUBLIC', 'CUSTOM')
       ORDER BY P.idProduct, UT.idTypeUser
     `);
 
@@ -189,6 +190,7 @@ export const getProductsWithPrices = async (req, res) => {
       if (!products[row.idProduct]) {
         products[row.idProduct] = {
           idProduct: row.idProduct,
+          idCategorie: row.idCategorie,
           nameProduct: row.nameProduct,
           descriptionProduct: row.descriptionProduct,
           urlImage: row.urlImage,

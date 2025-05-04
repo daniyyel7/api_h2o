@@ -19,6 +19,7 @@
     "morgan": "^1.10.0",
     "mssql": "^11.0.1",
     "multer": "^1.4.5-lts.2",
+    "nodemailer": "^6.10.1",
     "sharp": "^0.34.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"

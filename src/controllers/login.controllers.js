@@ -1,6 +1,7 @@
 import e from "express";
 import { getConnection } from "../database/connection.js";
 import sql from "mssql";
+import { sendEmail } from "../util/email.js";
 
 //Valida los ingresos de cliente
 export const clientLogin = async (req, res) => {
@@ -138,8 +139,112 @@ export const staffLogin = async (req, res) => {
   }
 };
 
-//Crea un registo de cliente, publico general o insitucional
 export const registerClient = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    const { correo, password, nombre, apellidoPaterno, apellidoMaterno, fechaNacimiento, sexo } = req.body;
+
+    if (!correo || !password || !nombre || !apellidoPaterno || !fechaNacimiento || sexo === undefined) {
+      return res.status(400).json({ success: false, message: "Faltan datos obligatorios." , data:{}});
+    }
+
+    // Validaciones de formato
+    let typeClient = null;
+    let isPhone = /^[0-9]{10}$/.test(correo);  // 10 dígitos numéricos exactos
+    let isEmail = /^[\w.-]+@[\w.-]+\.\w{2,}$/.test(correo); // Cualquier correo válido
+    let isInstitutionalEmail = /^[\w.-]+@ulv\.edu\.mx$/.test(correo); // email institucional
+
+    if (isPhone) {
+      typeClient = 5; // Cliente público general
+    } else if (isEmail) {
+      typeClient = isInstitutionalEmail ? 4 : 5; // Institucional o público general
+    } else {
+      return res.status(400).json({ 
+        success: false, 
+        message: "El usuario debe ser un número de 10 dígitos o un correo electrónico válido.",
+        data: {} 
+      });
+    }
+
+    // Validar si ya existe el usuario
+    const existe = await pool
+      .request()
+      .input("correo", sql.VarChar, correo)
+      .query("SELECT idUser FROM H2O.USERS WHERE nameUser = @correo");
+
+    if (existe.rowsAffected[0] > 0) {
+      return res.status(200).json({ success: false, message: "El usuario ya existe.", data: {} });
+    }
+
+    // Insertar en tabla USERS
+    const userResult = await pool
+      .request()
+      .input("nameUser", sql.VarChar, correo)
+      .input("password", sql.VarChar, password)
+      .input("type", sql.Int, typeClient)
+      .query(`
+        INSERT INTO H2O.USERS (nameUser, passwordUser, idTypeUser, idStatusUser, dateCreation) 
+        VALUES (@nameUser, @password, @type, 1, GETDATE());
+        SELECT SCOPE_IDENTITY() AS idUser;
+      `);
+
+    const idUser = userResult.recordset[0].idUser;
+
+    if (!idUser) {
+      return res.status(500).json({ success: false, message: "Error al crear el usuario." });
+    }
+
+    // Insertar en tabla CLIENTS_DATA
+    const clientResult = await pool
+      .request()
+      .input("idUser", sql.Int, idUser)
+      .input("nombre", sql.VarChar, nombre)
+      .input("apellidoPaterno", sql.VarChar, apellidoPaterno)
+      .input("apellidoMaterno", sql.VarChar, apellidoMaterno || null)
+      .input("telefono", sql.VarChar, isPhone ? correo : null) // Solo si fue número, guardamos como teléfono
+      .input("fechaNacimiento", sql.Date, fechaNacimiento)
+      .input("sexo", sql.Int, sexo)
+      .query(`
+        INSERT INTO H2O.CLIENTS_DATA (idUser, nameClient, firtsLastNameClient, secondLastNameClient, telephoneClient, urlPhotoClient, dateBirth, idSex) 
+        VALUES (@idUser, @nombre, @apellidoPaterno, @apellidoMaterno, @telefono, 'https://h2o.isdapps.uk/public/image_profile.png', @fechaNacimiento, @sexo);
+        SELECT SCOPE_IDENTITY() AS idClient;
+      `);
+
+    const idClient = clientResult.recordset[0].idClient;
+
+    if (isEmail) {
+
+      const dataEmail = { name: String(nombre).toUpperCase(), nameUser: correo };
+      // Enviar correo
+        await sendEmail(correo, "registre", dataEmail); // Implementa esta función
+      
+
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Usuario creado correctamente",
+      data: {
+        idUser,
+        idClient,
+        nameClient: nombre,
+        firtsLastNameClient: apellidoPaterno,
+        secondLastNameClient: apellidoMaterno,
+        telephoneClient: isPhone ? correo : null,
+        dateBirth: fechaNacimiento,
+        sexo,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Error interno del servidor.", error: error.message });
+  }
+};
+
+//Crea un registo de cliente, publico general o insitucional
+export const registerClient_anterior = async (req, res) => {
   const pool = await getConnection();
 
   //validamos si existe ya un registro del correo electronico
@@ -209,3 +314,4 @@ export const registerClient = async (req, res) => {
     });
   }
 };
+
