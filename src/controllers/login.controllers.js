@@ -53,8 +53,8 @@ WHERE CA.idUser = ${result.recordset[0].idUser}`
           idSex: result2.recordset[0].idSex,
           emailClient: result2.recordset[0].emailClient,
           idTypeUser: result2.recordset[0].idTypeUser,
-          tokeFB: req.body.tokenFB,
-          tokeJW: tokeJW,
+          tokenFB: req.body.tokenFB,
+          tokenJW: tokeJW,
         },
       });
     }

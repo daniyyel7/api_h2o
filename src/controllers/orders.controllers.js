@@ -41,7 +41,7 @@ export const createOrder = async (req, res) => {
     if (totalDebt >= 150) {
       return res.status(401).json({
         success: false,
-        message: `Cuenta con un adeudo de ${totalDebt} `,
+        message: `Cuenta con un adeudo de $${totalDebt} `,
         data: {},
       });
     }
@@ -56,6 +56,9 @@ export const createOrder = async (req, res) => {
 
   let idTypePayment = getTypePay.recordset[0].idTypePayment;
 
+  let statusPayment = 0;
+
+  
   //guarda los productos
   const cartItems = productsCar.recordset;
 
@@ -69,7 +72,7 @@ export const createOrder = async (req, res) => {
     .input("commentOrder", sql.NVarChar, req.body.comment)
     .input("dateDelivery", sql.NVarChar, req.body.dateDelivery)
     .query(
-      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment, commentOrder, dateDelivery, idStatusPayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment, @commentOrder, @dateDelivery, 1); SELECT SCOPE_IDENTITY() AS idOrder;   "
+      "INSERT INTO H2O.ORDERS ( idClient, dateOrder, idAddress, idOrderStatus, total, idTypePayment, commentOrder, dateDelivery, idStatusPayment) VALUES (@idClient, GETDATE() , @idAddress, 1,@total, @idTypePayment, @commentOrder, @dateDelivery, 0); SELECT SCOPE_IDENTITY() AS idOrder;   "
     );
 
   //Validar la orden se insertara correctamente
@@ -189,11 +192,21 @@ export const ordersStatus = async (req, res) => {
     const st = Number(req.body.estatus);
     let result;
 
-    if (st === 1) {
+    if (st === 0) {
+      result = await pool
+        .request()
+        .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
+        .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
+        .execute(`H2O.STP_LIST_ORDERS_ALL_ADMIN`);
+    } else if (st === 1) {
       result = await pool
         .request()
         .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
         .execute(`H2O.STP_LIST_ORDERS_BY_STATUS`);
+    } else if (st === 8) {
+      result = await pool
+        .request()
+        .execute(`H2O.STP_LIST_ORDERS_DEBT_ALL`);
     } else {
       result = await pool
         .request()
@@ -283,18 +296,20 @@ export const listOrdersAdmin = async (req, res) => {
       .request()
       .input("fecha", sql.Date, req.body.fecha) // Fecha como parámetro
       .input("status", sql.Int, req.body.estatus) // Estado de la orden como parámetro
-      .query(`SELECT
+      .query(`
+        SELECT
     O.idOrder,
     CONCAT_WS(' ', CD.nameClient, CD.firtsLastNameClient, CD.secondLastNameClient) AS nameComplete,
     UT.nameType,
-    OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd') AS dateOrder
+    OS.nameOrderStatus, FORMAT(O.dateOrder, 'yyyy-MM-dd') AS dateOrder, FORMAT(OSH.dateOrderStatusHistory, 'yyyy-MM-dd HH:mm') AS dateOrderStatus
 FROM H2O.ORDERS O
+ INNER JOIN H2O.ORDERS_STATUS_HISTORY OSH ON O.idOrder = OSH.idOrder AND O.idOrderStatus = OSH.idOrderStatus
     INNER JOIN H2O.ORDERS_STATUS OS ON O.idOrderStatus = OS.idOrderStatus
     INNER JOIN H2O.CLIENTS_DATA CD ON O.idClient = CD.idClient
     INNER JOIN H2O.USERS U ON CD.idUser = U.idUser
     INNER JOIN H2O.USERS_TYPE UT ON U.idTypeUser = UT.idTypeUser
-WHERE CAST(O.dateOrder AS DATE) = @fecha 
-    AND (@status = 0 OR O.idOrderStatus = @status);`);
+              WHERE CAST(OSH.dateOrderStatusHistory AS DATE) = @fecha 
+              AND (@status = 0 OR O.idOrderStatus = @status);`);
 
     // Verificar si se encontraron resultados
     if (result.recordset.length === 0) {
@@ -709,13 +724,11 @@ export const autoriceOrder = async (req, res) => {
 export const rejectedOrder = async (req, res) => {
   const pool = await getConnection();
 
-
   //Obtener idStaff
   const staff = await pool
     .request()
     .input("idUser", sql.Int, req.body.idUser)
     .query(`SELECT * FROM H2O.STAFF_COMPANY WHERE idUser = @idUser`);
-
 
   const result = await pool
     .request()
@@ -731,7 +744,7 @@ export const rejectedOrder = async (req, res) => {
     return res.status(404).json({ message: "order not found not canceled" });
   }
 
-   //Insertar el registro en el historial
+  //Insertar el registro en el historial
   //  De aacuerdo al catalogo
   // 1	pendiente	Orden pendiente de aceptación por el personal de la planta purificadora
   // 2	aceptada	Orden aceptada por la planta purificadora
@@ -825,6 +838,49 @@ export const listOrdersDebtByClient = async (req, res) => {
       .request()
       .input("idClient", sql.Int, req.params.idClient) // Fecha como parámetro
       .execute(`H2O.STP_LIST_ORDERS_DEBT_BY_CLIENT`);
+
+    const orders = result.recordset;
+
+    // Verificar si se encontraron resultados
+    if (result.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found for the given date and status",
+        data: {},
+      });
+    }
+
+    // Calcular el total de deuda
+    const totalDebt = orders.reduce(
+      (sum, order) => sum + parseFloat(order.total),
+      0
+    );
+
+    // Devolver el JSON con el número total de órdenes y las órdenes
+    return res.status(200).json({
+      success: true,
+      message: "Lista de ordenes",
+      data: {
+        totalDebt: totalDebt,
+        listOrders: result.recordset,
+      },
+    });
+  } catch (error) {
+    // Manejo de errores
+    console.error("Error fetching order status:", error);
+    return res.status(500).json({
+      message: "An error occurred while fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+export const listOrdersDebtForAdmin = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    // Consulta para obtener las órdenes con fecha y estado
+    const result = await pool.request().execute(`H2O.STP_LIST_ORDERS_DEBT_ALL`);
 
     const orders = result.recordset;
 

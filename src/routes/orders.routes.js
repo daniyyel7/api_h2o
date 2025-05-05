@@ -12,6 +12,7 @@ import {
   listOrdersByClient,
   listOrdersDebtByClient,
   updateStatusPayment,
+  listOrdersDebtForAdmin,
 } from "../controllers/orders.controllers.js";
 
 const router = Router();
@@ -44,5 +45,7 @@ router.get("/orders/detailOrder/:idOrder", detailOrder);
 router.get("/orders/listOrderByClient/:idClient", listOrdersByClient);
 router.get("/orders/debtbyclient/:idClient", listOrdersDebtByClient);
 
+
+router.get("/orders/alldebt", listOrdersDebtForAdmin);
 
 export default router;
